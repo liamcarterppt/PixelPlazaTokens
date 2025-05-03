@@ -68,6 +68,14 @@ mini_games = MiniGames()
 with app.app_context():
     initialize_tasks()
 
+# Get the Telegram bot username from environment variables
+TELEGRAM_BOT_USERNAME = os.environ.get('TELEGRAM_BOT_USERNAME', 'PixelPlazaTokenBot')
+
+# Add context processor to make Telegram bot username available in all templates
+@app.context_processor
+def inject_telegram_bot_username():
+    return {'telegram_bot_username': TELEGRAM_BOT_USERNAME}
+
 @app.route('/')
 def index():
     return render_template('index.html')

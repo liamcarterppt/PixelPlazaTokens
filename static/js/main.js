@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
     
-    // Enable animations when elements come into view
+    // Enhanced animations when elements come into view with support for delay
     const animateOnScroll = () => {
         const elements = document.querySelectorAll('.animate-on-scroll');
         
@@ -73,15 +73,79 @@ document.addEventListener('DOMContentLoaded', function() {
             const elementPosition = element.getBoundingClientRect().top;
             const screenPosition = window.innerHeight;
             
-            if (elementPosition < screenPosition) {
-                element.classList.add('animate__animated', element.dataset.animation || 'animate__fadeIn');
+            if (elementPosition < screenPosition - 50) { // Apply a small offset for earlier animation trigger
+                // Check if element is already animated
+                if (!element.classList.contains('animate__animated')) {
+                    // Add animation classes
+                    element.classList.add('animate__animated', element.dataset.animation || 'animate__fadeIn');
+                    
+                    // Apply delay if specified
+                    if (element.dataset.delay) {
+                        element.style.animationDelay = `${element.dataset.delay}ms`;
+                    }
+                    
+                    // Apply duration if specified
+                    if (element.dataset.duration) {
+                        element.style.animationDuration = `${element.dataset.duration}ms`;
+                    }
+                }
             }
         });
     };
     
-    // Run once on load and then on scroll
-    window.addEventListener('scroll', animateOnScroll);
+    // Run once on load and then on scroll with throttling for performance
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        if (!scrollTimeout) {
+            scrollTimeout = setTimeout(() => {
+                animateOnScroll();
+                scrollTimeout = null;
+            }, 10); // Throttle to every 10ms
+        }
+    });
+    
+    // Initial animation on page load
     animateOnScroll();
+    
+    // Animate number counters
+    const animateCounters = () => {
+        const counters = document.querySelectorAll('.counter');
+        
+        counters.forEach(counter => {
+            // Get target number from text content
+            const target = parseInt(counter.textContent, 10);
+            
+            // Reset counter content for animation
+            counter.textContent = '0';
+            
+            // Create animation function
+            const updateCounter = () => {
+                const current = parseInt(counter.textContent, 10);
+                
+                // Calculate increment (faster for larger numbers)
+                const increment = Math.ceil(target / 30);
+                
+                // If current is less than target, increment
+                if (current < target) {
+                    counter.textContent = Math.min(current + increment, target);
+                    setTimeout(updateCounter, 50);
+                }
+            };
+            
+            // Start animation when element is in view
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    updateCounter();
+                    observer.unobserve(counter);
+                }
+            }, { threshold: 0.5 });
+            
+            observer.observe(counter);
+        });
+    };
+    
+    // Initialize counter animations
+    animateCounters();
 });
 
 // Format numbers with commas
