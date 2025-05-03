@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+
+{% block title %}Tasks - Pixel Plaza{% endblock %}
+
+{% block extra_css %}
+<style>
+    .task-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .task-card {
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #273746;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .task-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .task-badge {
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+    }
+    
+    .task-badge-one-time {
+        background-color: #3498db;
+    }
+    
+    .task-badge-daily {
+        background-color: #2ecc71;
+    }
+    
+    .task-badge-weekly {
+        background-color: #9b59b6;
+    }
+    
+    .task-description {
+        color: #ccc;
+        margin-bottom: 15px;
+    }
+    
+    .task-reward {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .reward-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .progress-container {
+        margin-top: 10px;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        margin-bottom: 5px;
+    }
+    
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #aaa;
+    }
+    
+    .task-btn {
+        margin-top: 15px;
+    }
+    
+    @media (max-width: 576px) {
+        .task-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .task-badge {
+            margin-top: 5px;
+        }
+        
+        .task-reward {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-6">
+            <h1><i class="fas fa-tasks me-2"></i> Tasks</h1>
+            <p class="lead">Complete tasks to earn additional rewards!</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <a href="{{ url_for('web_game') }}?id={{ user.telegram_id }}" class="btn btn-outline-primary mt-2">
+                <i class="fas fa-gamepad me-2"></i> Back to Game
+            </a>
+        </div>
+    </div>
+    
+    <div class="task-container mt-4">
+        <!-- One-time Tasks -->
+        {% if one_time_tasks %}
+        <div class="mb-4">
+            <h4>One-time Tasks</h4>
+            {% for user_task, task in one_time_tasks %}
+            <div class="task-card">
+                <div class="task-header">
+                    <h5 class="task-title">{{ task.name }}</h5>
+                    <span class="task-badge task-badge-one-time">One Time</span>
+                </div>
+                <div class="task-description">{{ task.description }}</div>
+                <div class="task-reward">
+                    <div class="reward-item">
+                        <i class="fas fa-coins text-warning me-1"></i> {{ task.token_reward }} $PXPT
+                    </div>
+                    {% if task.pixel_reward > 0 %}
+                    <div class="reward-item">
+                        <i class="fas fa-paint-brush text-info me-1"></i> {{ task.pixel_reward }} Pixels
+                    </div>
+                    {% endif %}
+                    <div class="reward-item">
+                        <i class="fas fa-star text-primary me-1"></i> {{ task.experience_reward }} XP
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Progress: {{ user_task.current_progress }}/{{ task.objective_value }}</span>
+                        <span>{{ (user_task.current_progress / task.objective_value * 100)|round }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ (user_task.current_progress / task.objective_value * 100) }}%">
+                        </div>
+                    </div>
+                </div>
+                {% if user_task.completed %}
+                <button class="btn btn-success btn-sm mt-3 task-claim-btn" data-task-id="{{ task.id }}">
+                    <i class="fas fa-check-circle me-1"></i> Claim Reward
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Daily Tasks -->
+        {% if daily_tasks %}
+        <div class="mb-4">
+            <h4>Daily Tasks</h4>
+            <p class="text-muted small">Resets daily at midnight UTC</p>
+            {% for user_task, task in daily_tasks %}
+            <div class="task-card">
+                <div class="task-header">
+                    <h5 class="task-title">{{ task.name }}</h5>
+                    <span class="task-badge task-badge-daily">Daily</span>
+                </div>
+                <div class="task-description">{{ task.description }}</div>
+                <div class="task-reward">
+                    <div class="reward-item">
+                        <i class="fas fa-coins text-warning me-1"></i> {{ task.token_reward }} $PXPT
+                    </div>
+                    {% if task.pixel_reward > 0 %}
+                    <div class="reward-item">
+                        <i class="fas fa-paint-brush text-info me-1"></i> {{ task.pixel_reward }} Pixels
+                    </div>
+                    {% endif %}
+                    <div class="reward-item">
+                        <i class="fas fa-star text-primary me-1"></i> {{ task.experience_reward }} XP
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Progress: {{ user_task.current_progress }}/{{ task.objective_value }}</span>
+                        <span>{{ (user_task.current_progress / task.objective_value * 100)|round }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ (user_task.current_progress / task.objective_value * 100) }}%">
+                        </div>
+                    </div>
+                </div>
+                {% if user_task.completed %}
+                <button class="btn btn-success btn-sm mt-3 task-claim-btn" data-task-id="{{ task.id }}">
+                    <i class="fas fa-check-circle me-1"></i> Claim Reward
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Weekly Tasks -->
+        {% if weekly_tasks %}
+        <div class="mb-4">
+            <h4>Weekly Tasks</h4>
+            <p class="text-muted small">Resets weekly on Monday at midnight UTC</p>
+            {% for user_task, task in weekly_tasks %}
+            <div class="task-card">
+                <div class="task-header">
+                    <h5 class="task-title">{{ task.name }}</h5>
+                    <span class="task-badge task-badge-weekly">Weekly</span>
+                </div>
+                <div class="task-description">{{ task.description }}</div>
+                <div class="task-reward">
+                    <div class="reward-item">
+                        <i class="fas fa-coins text-warning me-1"></i> {{ task.token_reward }} $PXPT
+                    </div>
+                    {% if task.pixel_reward > 0 %}
+                    <div class="reward-item">
+                        <i class="fas fa-paint-brush text-info me-1"></i> {{ task.pixel_reward }} Pixels
+                    </div>
+                    {% endif %}
+                    <div class="reward-item">
+                        <i class="fas fa-star text-primary me-1"></i> {{ task.experience_reward }} XP
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Progress: {{ user_task.current_progress }}/{{ task.objective_value }}</span>
+                        <span>{{ (user_task.current_progress / task.objective_value * 100)|round }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-purple" role="progressbar" 
+                             style="width: {{ (user_task.current_progress / task.objective_value * 100) }}%">
+                        </div>
+                    </div>
+                </div>
+                {% if user_task.completed %}
+                <button class="btn btn-success btn-sm mt-3 task-claim-btn" data-task-id="{{ task.id }}">
+                    <i class="fas fa-check-circle me-1"></i> Claim Reward
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if not one_time_tasks and not daily_tasks and not weekly_tasks %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> No tasks available at the moment. Check back later!
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Task Completed</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resultModalBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const telegramId = '{{ user.telegram_id }}';
+    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+    const resultModalBody = document.getElementById('resultModalBody');
+    
+    // Claim task reward buttons
+    document.querySelectorAll('.task-claim-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const taskId = this.dataset.taskId;
+            
+            // Disable button
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Claiming...';
+            
+            // Send request to claim reward
+            fetch('/api/claim_task_reward', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `telegram_id=${telegramId}&task_id=${taskId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultModalBody.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i> ${data.message}
+                        </div>
+                    `;
+                    
+                    // Remove the completed status once claimed
+                    this.parentElement.classList.add('task-completed');
+                    this.remove();
+                } else {
+                    resultModalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i> ${data.message}
+                        </div>
+                    `;
+                    
+                    // Re-enable button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check-circle me-1"></i> Claim Reward';
+                }
+                
+                resultModal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultModalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i> An error occurred. Please try again.
+                    </div>
+                `;
+                
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check-circle me-1"></i> Claim Reward';
+                
+                resultModal.show();
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
