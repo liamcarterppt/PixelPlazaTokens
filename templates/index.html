@@ -16,6 +16,9 @@
             <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-primary btn-lg px-4 gap-3">
                 <i class="fab fa-telegram me-2"></i> Join on Telegram
             </a>
+            <a href="{{ url_for('web_game') }}" class="btn btn-success btn-lg px-4 gap-3">
+                <i class="fas fa-gamepad me-2"></i> Play on Web
+            </a>
             <a href="#how-it-works" class="btn btn-outline-secondary btn-lg px-4">
                 Learn More
             </a>
@@ -34,8 +37,8 @@
         <div class="card h-100 border-0 bg-dark">
             <div class="card-body text-center">
                 <i class="fas fa-robot fa-4x text-primary mb-3"></i>
-                <h3 class="card-title">1. Join our Telegram Bot</h3>
-                <p class="card-text">Connect with our Telegram bot to start building your pixel empire and earning $PXPT tokens.</p>
+                <h3 class="card-title">1. Join the Game</h3>
+                <p class="card-text">Connect with our Telegram bot or play directly on the web to start building your pixel empire.</p>
             </div>
         </div>
     </div>
@@ -151,10 +154,15 @@
         <div class="card p-5 bg-dark border-0">
             <div class="card-body">
                 <h2 class="card-title mb-4">Ready to Build Your Pixel Empire?</h2>
-                <p class="card-text lead mb-4">Join our Telegram bot now and start earning $PXPT tokens!</p>
-                <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-primary btn-lg">
-                    <i class="fab fa-telegram me-2"></i> Join on Telegram
-                </a>
+                <p class="card-text lead mb-4">Start earning $PXPT tokens now!</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-primary btn-lg">
+                        <i class="fab fa-telegram me-2"></i> Join on Telegram
+                    </a>
+                    <a href="{{ url_for('web_game') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-gamepad me-2"></i> Play on Web
+                    </a>
+                </div>
             </div>
         </div>
     </div>

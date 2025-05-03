@@ -27,6 +27,11 @@
                         <a class="nav-link" href="{{ url_for('index') }}">Home</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('web_game') }}">
+                            <i class="fas fa-gamepad me-1"></i>Play Game
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('leaderboard') }}">Leaderboard</a>
                     </li>
                     <li class="nav-item">
@@ -65,6 +70,7 @@
                     <h5>Links</h5>
                     <ul class="list-unstyled">
                         <li><a href="{{ url_for('index') }}" class="text-decoration-none text-secondary">Home</a></li>
+                        <li><a href="{{ url_for('web_game') }}" class="text-decoration-none text-secondary">Play Game</a></li>
                         <li><a href="{{ url_for('leaderboard') }}" class="text-decoration-none text-secondary">Leaderboard</a></li>
                         <li><a href="https://t.me/your_bot_username" target="_blank" class="text-decoration-none text-secondary">Telegram Bot</a></li>
                     </ul>

@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+
+{% block title %}Play $PXPT{% endblock %}
+
+{% block extra_css %}
+<style>
+    .game-container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .telegram-style {
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #273746;
+    }
+    
+    .game-action-btn {
+        border-radius: 8px;
+        margin-bottom: 10px;
+        padding: 12px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .game-action-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .tg-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+    }
+    
+    .resource-bar {
+        height: 8px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+    }
+    
+    .login-container {
+        max-width: 350px;
+        margin: 40px auto;
+    }
+    
+    .stat-badge {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+    
+    .result-box {
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        display: none;
+    }
+    
+    .transaction-item {
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1><i class="fas fa-gamepad me-2"></i>Pixel Plaza Game</h1>
+        <p class="lead">Build your pixel empire and earn $PXPT tokens!</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary mt-2">
+            <i class="fas fa-trophy me-2"></i>Leaderboard
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary mt-2 ms-2">
+            <i class="fas fa-home me-2"></i>Home
+        </a>
+    </div>
+</div>
+
+{% if login_required %}
+<div class="login-container telegram-style">
+    <h3 class="text-center mb-4">Join the Game</h3>
+    <p class="text-center">Create a username to start playing Pixel Plaza Token game!</p>
+    
+    <div id="registration-error" class="alert alert-danger d-none mb-3"></div>
+    
+    <form id="registration-form" class="mb-3">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Start Playing</button>
+    </form>
+    
+    <p class="text-center text-muted small">You can also play via our <a href="https://t.me/your_bot_username" target="_blank">Telegram Bot</a></p>
+</div>
+{% else %}
+
+<div class="game-container">
+    <!-- User Info Header -->
+    <div class="telegram-style mb-4">
+        <div class="tg-header d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1">{{ user.username }}</h4>
+                <span class="badge bg-info">Level {{ game_state.level }}</span>
+            </div>
+            <div class="text-end">
+                <h5 class="text-warning mb-1">{{ game_state.token_balance|round(2) }} $PXPT</h5>
+            </div>
+        </div>
+        
+        <!-- Resources Section -->
+        <div class="resources mb-4">
+            <div class="row g-2">
+                <div class="col-6">
+                    <div>
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-bolt text-warning me-1"></i> Energy</span>
+                            <span>{{ game_state.energy }}/100</span>
+                        </div>
+                        <div class="progress resource-bar">
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: {{ (game_state.energy / 100) * 100 }}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div>
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-paint-brush text-info me-1"></i> Pixels</span>
+                            <span>{{ game_state.pixels }}</span>
+                        </div>
+                        <div class="progress resource-bar">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: {{ min((game_state.pixels / 100) * 100, 100) }}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <div class="d-flex justify-content-between">
+                    <span><i class="fas fa-star text-primary me-1"></i> Experience</span>
+                    <span>{{ game_state.experience }}/{{ game_state.level * 100 }}</span>
+                </div>
+                <div class="progress resource-bar">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                         style="width: {{ (game_state.experience / (game_state.level * 100)) * 100 }}%">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Section -->
+        <div class="mb-4">
+            <h6>Your Stats:</h6>
+            <div>
+                <span class="badge bg-secondary stat-badge">
+                    <i class="fas fa-building me-1"></i> {{ game_state.buildings_owned }} Buildings
+                </span>
+                <span class="badge bg-secondary stat-badge">
+                    <i class="fas fa-palette me-1"></i> {{ game_state.pixel_art_created }} Artworks
+                </span>
+                <span class="badge bg-secondary stat-badge">
+                    <i class="fas fa-fire me-1"></i> {{ game_state.daily_streak }} Day Streak
+                </span>
+            </div>
+        </div>
+        
+        <!-- Game Actions -->
+        <div id="action-result" class="result-box"></div>
+        
+        <div class="actions">
+            <div class="row g-2">
+                <div class="col-6">
+                    <button class="btn btn-primary w-100 game-action-btn game-action" data-action="daily">
+                        <i class="fas fa-calendar-day d-block mb-1"></i>
+                        Daily Claim
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-warning w-100 game-action-btn game-action" data-action="mine">
+                        <i class="fas fa-hammer d-block mb-1"></i>
+                        Mine Pixels
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-danger w-100 game-action-btn game-action" data-action="create">
+                        <i class="fas fa-palette d-block mb-1"></i>
+                        Create Art
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-success w-100 game-action-btn game-action" data-action="build">
+                        <i class="fas fa-building d-block mb-1"></i>
+                        Build
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-info w-100 game-action-btn game-action" data-action="collect">
+                        <i class="fas fa-piggy-bank d-block mb-1"></i>
+                        Collect Income
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-outline-light w-100 game-action-btn" id="wallet-btn">
+                        <i class="fas fa-wallet d-block mb-1"></i>
+                        Set Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="telegram-style">
+        <h5 class="mb-3"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+        
+        <div id="transactions-container">
+            {% if transactions %}
+                {% for tx in transactions %}
+                <div class="transaction-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            {% if tx.type == 'daily_reward' %}
+                                <span class="badge bg-primary me-2">Daily</span>
+                            {% elif tx.type == 'mining' %}
+                                <span class="badge bg-warning me-2">Mining</span>
+                            {% elif tx.type == 'pixel_art' %}
+                                <span class="badge bg-danger me-2">Pixel Art</span>
+                            {% elif tx.type == 'building_income' %}
+                                <span class="badge bg-success me-2">Income</span>
+                            {% elif tx.type == 'building_purchase' %}
+                                <span class="badge bg-info me-2">Purchase</span>
+                            {% else %}
+                                <span class="badge bg-secondary me-2">{{ tx.type }}</span>
+                            {% endif %}
+                            {{ tx.description }}
+                        </div>
+                        <div class="{{ 'text-success' if tx.amount > 0 else 'text-danger' }}">
+                            {{ tx.amount|round(2) }} $PXPT
+                        </div>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        {{ tx.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-muted">No transactions yet. Start playing!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Wallet Modal -->
+<div class="modal fade" id="walletModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if user.wallet_address %}Update{% else %}Set{% endif %} Wallet Address
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Enter your ERC-20 compatible wallet address to receive $PXPT tokens during the airdrop.</p>
+                <form id="wallet-form">
+                    <div class="mb-3">
+                        <label for="wallet-address" class="form-label">Wallet Address</label>
+                        <input type="text" class="form-control" id="wallet-address" value="{{ user.wallet_address or '' }}" placeholder="0x...">
+                        <div class="form-text">Must be a valid ERC-20 compatible wallet address starting with 0x.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-wallet">Save Address</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if not login_required %}
+    const telegramId = '{{ user.telegram_id }}';
+    
+    // Game Actions
+    document.querySelectorAll('.game-action').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const resultEl = document.getElementById('action-result');
+            
+            // Disable all action buttons
+            document.querySelectorAll('.game-action').forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            
+            // Send action to server
+            fetch('/api/game_action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `telegram_id=${telegramId}&action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Re-enable buttons
+                document.querySelectorAll('.game-action').forEach(btn => {
+                    btn.disabled = false;
+                });
+                
+                // Reset button text
+                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${getTextForAction(action)}`;
+                
+                // Show result
+                resultEl.textContent = data.message;
+                resultEl.className = data.success ? 'result-box alert alert-success' : 'result-box alert alert-danger';
+                resultEl.style.display = 'block';
+                
+                // Auto-refresh after 3 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.querySelectorAll('.game-action').forEach(btn => {
+                    btn.disabled = false;
+                });
+                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${getTextForAction(action)}`;
+                resultEl.textContent = 'An error occurred. Please try again.';
+                resultEl.className = 'result-box alert alert-danger';
+                resultEl.style.display = 'block';
+            });
+        });
+    });
+    
+    // Wallet Modal
+    document.getElementById('wallet-btn').addEventListener('click', function() {
+        const walletModal = new bootstrap.Modal(document.getElementById('walletModal'));
+        walletModal.show();
+    });
+    
+    // Wallet form submission
+    document.getElementById('save-wallet').addEventListener('click', function() {
+        const walletAddress = document.getElementById('wallet-address').value.trim();
+        
+        // Basic validation
+        if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
+            alert('Please enter a valid ERC-20 wallet address (starting with 0x and 42 characters long)');
+            return;
+        }
+        
+        // Send to server
+        fetch('/api/update_wallet', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `telegram_id=${telegramId}&wallet_address=${walletAddress}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('walletModal')).hide();
+                
+                const resultEl = document.getElementById('action-result');
+                resultEl.textContent = 'Wallet address updated successfully!';
+                resultEl.className = 'result-box alert alert-success';
+                resultEl.style.display = 'block';
+                
+                // Auto-refresh after 2 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating your wallet address. Please try again.');
+        });
+    });
+    {% else %}
+    // Registration form submission
+    document.getElementById('registration-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value.trim();
+        const errorElement = document.getElementById('registration-error');
+        
+        if (!username) {
+            errorElement.textContent = 'Username is required';
+            errorElement.classList.remove('d-none');
+            return;
+        }
+        
+        // Disable form
+        document.querySelector('#registration-form button').disabled = true;
+        document.querySelector('#registration-form button').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating account...';
+        
+        // Send to server
+        fetch('/api/web_register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `username=${encodeURIComponent(username)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect to game with the new telegram_id
+                window.location.href = `/web-game?id=${data.telegram_id}`;
+            } else {
+                errorElement.textContent = data.message;
+                errorElement.classList.remove('d-none');
+                document.querySelector('#registration-form button').disabled = false;
+                document.querySelector('#registration-form button').textContent = 'Start Playing';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            errorElement.textContent = 'An error occurred during registration. Please try again.';
+            errorElement.classList.remove('d-none');
+            document.querySelector('#registration-form button').disabled = false;
+            document.querySelector('#registration-form button').textContent = 'Start Playing';
+        });
+    });
+    {% endif %}
+});
+
+// Helper functions for action buttons
+function getIconForAction(action) {
+    switch (action) {
+        case 'daily': return 'calendar-day';
+        case 'mine': return 'hammer';
+        case 'create': return 'palette';
+        case 'build': return 'building';
+        case 'collect': return 'piggy-bank';
+        default: return 'gamepad';
+    }
+}
+
+function getTextForAction(action) {
+    switch (action) {
+        case 'daily': return 'Daily Claim';
+        case 'mine': return 'Mine Pixels';
+        case 'create': return 'Create Art';
+        case 'build': return 'Build';
+        case 'collect': return 'Collect Income';
+        default: return action;
+    }
+}
+</script>
+{% endblock %}

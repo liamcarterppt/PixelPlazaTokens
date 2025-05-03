@@ -72,6 +72,25 @@ def dashboard():
         transactions=transactions
     )
 
+@app.route('/web-game')
+def web_game():
+    """Web-based game interface compatible with Telegram UI"""
+    # Check if there's a telegram ID in the query parameters
+    telegram_id = request.args.get('id')
+    
+    # For existing Telegram users
+    if telegram_id:
+        user = User.query.filter_by(telegram_id=telegram_id).first()
+        if user:
+            game_state = GameState.query.filter_by(user_id=user.id).first()
+            if game_state:
+                # Get recent transactions
+                transactions = Transaction.query.filter_by(user_id=user.id).order_by(Transaction.timestamp.desc()).limit(5).all()
+                return render_template('web_game.html', user=user, game_state=game_state, transactions=transactions, login_required=False)
+    
+    # For users who aren't logged in yet
+    return render_template('web_game.html', login_required=True)
+
 @app.route('/leaderboard')
 def leaderboard():
     # Get top 20 users by token balance
@@ -199,6 +218,59 @@ def update_wallet():
     db.session.commit()
     
     return jsonify({'success': True, 'message': 'Wallet address updated successfully'})
+
+@app.route('/api/web_register', methods=['POST'])
+def web_register():
+    """API endpoint for web-based user registration"""
+    username = request.form.get('username')
+    
+    if not username:
+        return jsonify({'success': False, 'message': 'Username is required'})
+    
+    # Generate a unique telegram_id for web users (prefixed with 'web_')
+    web_id = f"web_{int(datetime.now().timestamp())}"
+    
+    # Check if username already exists
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return jsonify({'success': False, 'message': 'Username already taken'})
+    
+    try:
+        # Create new user
+        new_user = User(
+            username=username,
+            telegram_id=web_id,
+        )
+        db.session.add(new_user)
+        db.session.flush()  # Flush to get the ID without committing
+        
+        # Create initial game state
+        new_game_state = GameState(
+            user_id=new_user.id,
+            token_balance=10,  # Initial tokens
+        )
+        db.session.add(new_game_state)
+        
+        # Record initial transaction
+        welcome_transaction = Transaction(
+            user_id=new_user.id,
+            type='welcome_bonus',
+            amount=10,
+            description=f'Welcome bonus of 10 $PXPT'
+        )
+        db.session.add(welcome_transaction)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Registration successful', 
+            'telegram_id': web_id
+        })
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error during web registration: {str(e)}")
+        return jsonify({'success': False, 'message': f'Registration failed: {str(e)}'})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
