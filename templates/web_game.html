@@ -141,7 +141,7 @@
                         </div>
                         <div class="progress resource-bar">
                             <div class="progress-bar bg-info" role="progressbar" 
-                                 style="width: {{ (game_state.pixels / 100 * 100)|min(100) }}%">
+                                 style="width: {% if game_state.pixels > 100 %}100{% else %}{{ (game_state.pixels / 100 * 100) }}{% endif %}%">
                             </div>
                         </div>
                     </div>
