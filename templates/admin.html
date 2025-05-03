@@ -4,7 +4,8 @@
 
 {% block extra_css %}
 <!-- Chart.js for analytics -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <!-- Date range picker for filtering -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
@@ -2599,4 +2600,248 @@ Don't forget to register your ERC-20 wallet to be eligible for the airdrop!
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Real-time Analytics Dashboard Charts -->
+<script>
+// Chart.js Configuration for Dark Theme
+Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+Chart.defaults.font.family = "'Segoe UI', system-ui, -apple-system, sans-serif";
+
+// Chart data - In a real implementation, this would come from your backend API
+const userData = {
+    labels: ['Apr 1', 'Apr 8', 'Apr 15', 'Apr 22', 'Apr 29', 'May 3'],
+    datasets: [{
+        label: 'New Users',
+        data: [12, 19, 35, 42, 56, 75],
+        backgroundColor: 'rgba(52, 152, 219, 0.5)',
+        borderColor: 'rgba(52, 152, 219, 1)',
+        tension: 0.4,
+        fill: true
+    }]
+};
+
+const tokenData = {
+    labels: ['Mining', 'Art Creation', 'Buildings', 'Task Rewards', 'Referrals'],
+    datasets: [{
+        label: 'Token Distribution',
+        data: [35, 25, 20, 15, 5],
+        backgroundColor: [
+            'rgba(52, 152, 219, 0.8)',
+            'rgba(155, 89, 182, 0.8)',
+            'rgba(46, 204, 113, 0.8)',
+            'rgba(241, 196, 15, 0.8)',
+            'rgba(230, 126, 34, 0.8)'
+        ],
+        borderWidth: 0
+    }]
+};
+
+const activityData = {
+    labels: ['Mining', 'Art Creation', 'Building', 'Collection', 'Market Trading'],
+    datasets: [{
+        label: 'Activity Count',
+        data: [300, 250, 150, 180, 120],
+        backgroundColor: [
+            'rgba(52, 152, 219, 0.8)',
+            'rgba(155, 89, 182, 0.8)',
+            'rgba(46, 204, 113, 0.8)',
+            'rgba(241, 196, 15, 0.8)',
+            'rgba(230, 126, 34, 0.8)'
+        ]
+    }]
+};
+
+// Initialize Charts when DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // User Growth Chart
+    const userGrowthChart = document.getElementById('userGrowthChart');
+    if (userGrowthChart) {
+        new Chart(userGrowthChart, {
+            type: 'line',
+            data: userData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                    }
+                }
+            }
+        });
+    }
+
+    // Token Distribution Chart
+    const tokenDistributionChart = document.getElementById('tokenDistributionChart');
+    if (tokenDistributionChart) {
+        new Chart(tokenDistributionChart, {
+            type: 'doughnut',
+            data: tokenData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                    }
+                }
+            }
+        });
+    }
+
+    // Activity Chart
+    const activityChart = document.getElementById('activityChart');
+    if (activityChart) {
+        new Chart(activityChart, {
+            type: 'bar',
+            data: activityData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Initialize Rich Text Editor functionality
+    initRichTextEditor();
+});
+
+// Rich Text Editor Implementation
+function initRichTextEditor() {
+    const editorButtons = document.querySelectorAll('.rich-editor-toolbar button');
+    const contentArea = document.querySelector('.rich-editor-content');
+    const hiddenInput = document.getElementById('announcement_content_input');
+    
+    if (!editorButtons.length || !contentArea) return;
+    
+    // Set placeholder text behavior
+    contentArea.addEventListener('focus', function() {
+        if (this.textContent.trim() === '') {
+            this.textContent = '';
+        }
+    });
+    
+    contentArea.addEventListener('blur', function() {
+        if (this.textContent.trim() === '') {
+            this.setAttribute('data-empty', 'true');
+        } else {
+            this.setAttribute('data-empty', 'false');
+            // Update hidden input with content
+            if (hiddenInput) {
+                hiddenInput.value = this.innerHTML;
+            }
+        }
+    });
+    
+    // Editor command buttons
+    editorButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const command = this.getAttribute('data-command');
+            
+            if (command === 'createLink') {
+                const url = prompt('Enter link URL:');
+                if (url) document.execCommand(command, false, url);
+            } else if (command === 'heading') {
+                document.execCommand('formatBlock', false, '<h4>');
+            } else {
+                document.execCommand(command, false, null);
+            }
+            
+            // Toggle active state for style buttons
+            if (['bold', 'italic', 'underline', 'strikeThrough'].includes(command)) {
+                this.classList.toggle('active');
+            }
+            
+            contentArea.focus();
+            
+            // Update hidden input with content
+            if (hiddenInput) {
+                hiddenInput.value = contentArea.innerHTML;
+            }
+        });
+    });
+}
+
+// Real-time data refresh function (would pull from server API in production)
+function refreshData() {
+    // This would make an AJAX call to get updated data from the server
+    console.log('Refreshing dashboard data...');
+    
+    // Example of how you might update charts with new data
+    // In a real implementation, this would use data from the backend
+    setTimeout(() => {
+        // Data would be fetched from server here
+        
+        // Mock implementation to show how it would work
+        /*
+        fetch('/api/admin/dashboard-stats')
+            .then(response => response.json())
+            .then(data => {
+                // Update charts with new data
+                userGrowthChart.data.datasets[0].data = data.userGrowth;
+                userGrowthChart.update();
+                
+                tokenDistributionChart.data.datasets[0].data = data.tokenDistribution;
+                tokenDistributionChart.update();
+                
+                activityChart.data.datasets[0].data = data.activityBreakdown;
+                activityChart.update();
+            })
+            .catch(error => console.error('Error fetching dashboard data:', error));
+        */
+    }, 1000);
+}
+
+// Set up data refresh interval - every 30 seconds
+// In a production environment, you might want to use WebSockets for real-time updates
+const refreshInterval = setInterval(refreshData, 30000);
+
+// Clean up interval when page unloads
+window.addEventListener('beforeunload', function() {
+    clearInterval(refreshInterval);
+});
+</script>
 {% endblock %}
