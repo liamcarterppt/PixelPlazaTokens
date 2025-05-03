@@ -1910,29 +1910,30 @@ if (marketCtx) {
 }
 
 // User Search & Filtering
-const userSearch = document.getElementById('userSearch');
-const filterActivity = document.getElementById('filterActivity');
-const filterWallet = document.getElementById('filterWallet');
-const applyFilters = document.getElementById('applyFilters');
-const userTable = document.getElementById('userTable');
+var userSearch = document.getElementById('userSearch');
+var filterActivity = document.getElementById('filterActivity');
+var filterWallet = document.getElementById('filterWallet');
+var applyFilters = document.getElementById('applyFilters');
+var userTable = document.getElementById('userTable');
 
 if (applyFilters && userTable) {
     applyFilters.addEventListener('click', function() {
-        const searchTerm = userSearch?.value?.toLowerCase() || '';
-        const activityFilter = filterActivity?.value || 'all';
-        const walletFilter = filterWallet?.value || 'all';
+        var searchTerm = userSearch && userSearch.value ? userSearch.value.toLowerCase() : '';
+        var activityFilter = filterActivity && filterActivity.value ? filterActivity.value : 'all';
+        var walletFilter = filterWallet && filterWallet.value ? filterWallet.value : 'all';
         
-        const rows = userTable.querySelectorAll('tbody tr');
+        var rows = userTable.querySelectorAll('tbody tr');
         
-        rows.forEach(row => {
-            const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            const hasWallet = !row.querySelector('td:nth-child(4)').textContent.includes('Not set');
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            var hasWallet = !row.querySelector('td:nth-child(4)').textContent.includes('Not set');
             
             // Search filter
-            const matchesSearch = searchTerm === '' || username.includes(searchTerm);
+            var matchesSearch = searchTerm === '' || username.includes(searchTerm);
             
             // Wallet filter
-            let matchesWallet = true;
+            var matchesWallet = true;
             if (walletFilter === 'yes') {
                 matchesWallet = hasWallet;
             } else if (walletFilter === 'no') {
@@ -1941,7 +1942,7 @@ if (applyFilters && userTable) {
             
             // Simple activity filter for demo
             // In reality, this would use server-side filtering
-            let matchesActivity = true;
+            var matchesActivity = true;
             
             // Show/hide based on combined filters
             if (matchesSearch && matchesWallet && matchesActivity) {
@@ -1949,7 +1950,7 @@ if (applyFilters && userTable) {
             } else {
                 row.style.display = 'none';
             }
-        });
+        }
     });
 }
 
