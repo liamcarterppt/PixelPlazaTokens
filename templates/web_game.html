@@ -473,6 +473,16 @@
         overflow: hidden;
     }
     
+    .icon-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        color: white;
+    }
+    
     .mini-game-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
@@ -1755,7 +1765,7 @@ function loadAvailableMiniGames(telegramId) {
     document.getElementById('mini-games-content').style.display = 'none';
     
     // Fetch available games from server
-    fetch('/api/get_mini_games', {
+    fetch('/api/mini-games/available', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -1982,16 +1992,12 @@ function submitGameResult(telegramId, gameType) {
     submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`;
     
     // Send to server
-    fetch('/api/play_mini_game', {
+    fetch('/api/mini-games/play', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-            telegram_id: telegramId,
-            game_type: gameType,
-            game_data: gameData
-        })
+        body: `telegram_id=${telegramId}&game_type=${gameType}&game_data=${JSON.stringify(gameData)}`
     })
     .then(response => response.json())
     .then(data => {
