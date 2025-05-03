@@ -819,6 +819,579 @@
     </div>
     
     <!-- Airdrop Planning Tab -->
+    <!-- Content Management Tab -->
+    <div class="tab-pane fade" id="content" role="tabpanel" aria-labelledby="content-tab">
+        <div class="row">
+            <div class="col-12 col-lg-3 mb-4">
+                <!-- Content Navigation Sidebar -->
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Content Areas</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush content-nav">
+                            <a href="#tasks-section" class="list-group-item list-group-item-action active bg-transparent text-white" data-bs-toggle="list">
+                                <i class="fas fa-tasks me-2"></i>Tasks & Quests
+                            </a>
+                            <a href="#announcements-section" class="list-group-item list-group-item-action bg-transparent text-white" data-bs-toggle="list">
+                                <i class="fas fa-bullhorn me-2"></i>Announcements
+                            </a>
+                            <a href="#events-section" class="list-group-item list-group-item-action bg-transparent text-white" data-bs-toggle="list">
+                                <i class="fas fa-calendar-alt me-2"></i>Game Events
+                            </a>
+                            <a href="#help-section" class="list-group-item list-group-item-action bg-transparent text-white" data-bs-toggle="list">
+                                <i class="fas fa-question-circle me-2"></i>Help Content
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-dark border-0">
+                        <button class="btn btn-primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#contentPreviewModal">
+                            <i class="fas fa-eye me-2"></i>Preview Changes
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Content Stats -->
+                <div class="card bg-dark stat-card mt-4">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Content Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Active Tasks</span>
+                            <span class="badge bg-primary">{{ active_tasks|default(8) }}</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 5px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 80%"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Announcements</span>
+                            <span class="badge bg-info">{{ announcements|default(3) }}</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 5px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 30%"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Active Events</span>
+                            <span class="badge bg-warning">{{ active_events|default(1) }}</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 5px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 10%"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Help Articles</span>
+                            <span class="badge bg-success">{{ help_articles|default(5) }}</span>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-lg-9">
+                <!-- Content Tab Content -->
+                <div class="tab-content">
+                    <!-- Tasks Section -->
+                    <div class="tab-pane fade show active" id="tasks-section">
+                        <div class="card bg-dark stat-card">
+                            <div class="card-header bg-dark border-0 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Manage Tasks</h5>
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                                    <i class="fas fa-plus me-2"></i>New Task
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="filter-bar mb-3">
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <input type="text" class="form-control" placeholder="Search tasks...">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-select">
+                                                <option value="all">All Types</option>
+                                                <option value="one_time">One-time</option>
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-select">
+                                                <option value="all">All Status</option>
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-primary w-100">
+                                                <i class="fas fa-filter"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Task List -->
+                                <div class="task-list">
+                                    {% for task in tasks|default([
+                                        {'id': 1, 'name': 'Welcome Bonus', 'description': 'Create your account and receive a welcome bonus!', 'type': 'one_time', 'objective': 'registration', 'value': 1, 'active': True},
+                                        {'id': 2, 'name': 'Daily Check-in', 'description': 'Check in daily to receive tokens', 'type': 'daily', 'objective': 'login', 'value': 1, 'active': True},
+                                        {'id': 3, 'name': 'Mining Master', 'description': 'Mine 100 pixels in a single day', 'type': 'daily', 'objective': 'mining', 'value': 100, 'active': True},
+                                        {'id': 4, 'name': 'Building Tycoon', 'description': 'Own 5 buildings', 'type': 'one_time', 'objective': 'building', 'value': 5, 'active': True},
+                                        {'id': 5, 'name': 'Art Exhibition', 'description': 'Create 10 pixel arts', 'type': 'one_time', 'objective': 'pixel_art', 'value': 10, 'active': True},
+                                        {'id': 6, 'name': 'Community Leader', 'description': 'Refer 3 friends', 'type': 'one_time', 'objective': 'referral', 'value': 3, 'active': True},
+                                        {'id': 7, 'name': 'Weekly Collector', 'description': 'Collect from buildings 7 days in a row', 'type': 'weekly', 'objective': 'collection', 'value': 7, 'active': True},
+                                        {'id': 8, 'name': 'Market Maker', 'description': 'Complete 5 market transactions in a week', 'type': 'weekly', 'objective': 'market', 'value': 5, 'active': False}
+                                    ]) %}
+                                    <div class="card mb-3 content-item">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-auto">
+                                                    <i class="fas fa-grip-vertical drag-handle"></i>
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <h5 class="mb-1">{{ task.name }}</h5>
+                                                    <p class="mb-0 text-muted small">{{ task.description }}</p>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="badge bg-primary mb-1">{{ task.type }}</div>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="badge bg-info me-2">{{ task.objective }}</span>
+                                                        <span class="small text-muted">× {{ task.value }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="form-check form-switch mb-1">
+                                                        <input class="form-check-input" type="checkbox" id="task{{ task.id }}" {% if task.active %}checked{% endif %}>
+                                                        <label class="form-check-label" for="task{{ task.id }}">
+                                                            {% if task.active %}
+                                                            <span class="text-success">Active</span>
+                                                            {% else %}
+                                                            <span class="text-danger">Inactive</span>
+                                                            {% endif %}
+                                                        </label>
+                                                    </div>
+                                                    <span class="badge bg-secondary">ID: {{ task.id }}</span>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <div class="content-actions">
+                                                        <button class="btn btn-sm btn-outline-primary mb-1" data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- Pagination -->
+                                <nav aria-label="Task pagination" class="mt-4">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Announcements Section -->
+                    <div class="tab-pane fade" id="announcements-section">
+                        <div class="card bg-dark stat-card">
+                            <div class="card-header bg-dark border-0 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-bullhorn me-2"></i>Game Announcements</h5>
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal">
+                                    <i class="fas fa-plus me-2"></i>New Announcement
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <!-- Announcement List -->
+                                <div class="announcement-list">
+                                    {% for announcement in announcements|default([
+                                        {'id': 1, 'title': 'Welcome to Pixel Plaza Token!', 'content': 'Welcome to our game! Earn tokens, build your empire, and prepare for the airdrop.', 'date': '2025-04-28', 'priority': 'high'},
+                                        {'id': 2, 'title': 'New Features Released', 'content': 'We\'ve added new mining mechanics and pixel art creation tools. Check them out!', 'date': '2025-05-01', 'priority': 'medium'},
+                                        {'id': 3, 'title': 'Upcoming Airdrop Details', 'content': 'The $PXPT airdrop is scheduled for May 10. Make sure your wallet is registered!', 'date': '2025-05-02', 'priority': 'high'}
+                                    ]) %}
+                                    <div class="card mb-3 content-item">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-7">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <h5 class="mb-0">{{ announcement.title }}</h5>
+                                                        {% if announcement.priority == 'high' %}
+                                                        <span class="badge bg-danger ms-2">Important</span>
+                                                        {% elif announcement.priority == 'medium' %}
+                                                        <span class="badge bg-warning ms-2">Announcement</span>
+                                                        {% else %}
+                                                        <span class="badge bg-info ms-2">Info</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <p class="mb-0 text-muted">{{ announcement.content }}</p>
+                                                </div>
+                                                <div class="col-md-3 text-md-center">
+                                                    <div class="small text-muted mb-1">Published on</div>
+                                                    <div class="badge bg-secondary">{{ announcement.date }}</div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="content-actions d-flex justify-content-end">
+                                                        <button class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editAnnouncementModal">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-success me-2">
+                                                            <i class="fas fa-paper-plane"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- New Announcement Form -->
+                                <div class="card mt-4">
+                                    <div class="card-header bg-dark">
+                                        <h5 class="mb-0">Quick Announcement</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label class="form-label">Title</label>
+                                                <input type="text" class="form-control" placeholder="Announcement title">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Content</label>
+                                                <textarea class="form-control" rows="3" placeholder="Announcement content"></textarea>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Priority</label>
+                                                    <select class="form-select">
+                                                        <option value="low">Low</option>
+                                                        <option value="medium">Medium</option>
+                                                        <option value="high">High</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Publish Date</label>
+                                                    <input type="date" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="button" class="btn btn-primary">
+                                                    <i class="fas fa-paper-plane me-2"></i>Send Announcement
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Events Section -->
+                    <div class="tab-pane fade" id="events-section">
+                        <div class="card bg-dark stat-card">
+                            <div class="card-header bg-dark border-0 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Game Events</h5>
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#createEventModal">
+                                    <i class="fas fa-plus me-2"></i>New Event
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="card bg-dark">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Current Active Events</h5>
+                                                <div class="list-group list-group-flush">
+                                                    {% for event in active_events_list|default([
+                                                        {'name': 'Mining Madness', 'description': 'Mining production increased by 50%', 'end_date': '2025-05-05'}
+                                                    ]) %}
+                                                    <div class="list-group-item bg-transparent text-white">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="mb-1">{{ event.name }}</h6>
+                                                                <p class="mb-0 small text-muted">{{ event.description }}</p>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <span class="badge bg-warning">Ends: {{ event.end_date }}</span>
+                                                                <button class="btn btn-sm btn-outline-danger ms-2">
+                                                                    <i class="fas fa-times"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-dark">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Upcoming Events</h5>
+                                                <div class="list-group list-group-flush">
+                                                    {% for event in upcoming_events|default([
+                                                        {'name': 'Pixel Art Festival', 'description': 'Art creation rewards doubled', 'start_date': '2025-05-07', 'end_date': '2025-05-10'},
+                                                        {'name': 'Building Bonanza', 'description': 'Building costs reduced by 20%', 'start_date': '2025-05-12', 'end_date': '2025-05-15'}
+                                                    ]) %}
+                                                    <div class="list-group-item bg-transparent text-white">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="mb-1">{{ event.name }}</h6>
+                                                                <p class="mb-0 small text-muted">{{ event.description }}</p>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <span class="badge bg-info">Starts: {{ event.start_date }}</span>
+                                                                <button class="btn btn-sm btn-outline-primary ms-2">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Event Creator -->
+                                <div class="card">
+                                    <div class="card-header bg-dark">
+                                        <h5 class="mb-0">Quick Event Creator</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Event Name</label>
+                                                    <input type="text" class="form-control" placeholder="Event name">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Event Type</label>
+                                                    <select class="form-select">
+                                                        <option value="seasonal">Seasonal</option>
+                                                        <option value="special">Special</option>
+                                                        <option value="crisis">Crisis (Negative)</option>
+                                                        <option value="boom">Economic Boom</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control" rows="2" placeholder="Event description"></textarea>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Start Date</label>
+                                                    <input type="date" class="form-control">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">End Date</label>
+                                                    <input type="date" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label">Mining Mult.</label>
+                                                    <input type="number" step="0.1" class="form-control" value="1.0">
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label">Art Mult.</label>
+                                                    <input type="number" step="0.1" class="form-control" value="1.0">
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label">Building Mult.</label>
+                                                    <input type="number" step="0.1" class="form-control" value="1.0">
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label">Market Fee Mult.</label>
+                                                    <input type="number" step="0.1" class="form-control" value="1.0">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="affectTokens" checked>
+                                                        <label class="form-check-label" for="affectTokens">Affects Tokens</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="affectPixels">
+                                                        <label class="form-check-label" for="affectPixels">Affects Pixels</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="affectMaterials">
+                                                        <label class="form-check-label" for="affectMaterials">Affects Materials</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="affectGems">
+                                                        <label class="form-check-label" for="affectGems">Affects Gems</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="button" class="btn btn-primary">
+                                                    <i class="fas fa-calendar-plus me-2"></i>Schedule Event
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Help Content Section -->
+                    <div class="tab-pane fade" id="help-section">
+                        <div class="card bg-dark stat-card">
+                            <div class="card-header bg-dark border-0 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Help & Tutorial Content</h5>
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#createHelpModal">
+                                    <i class="fas fa-plus me-2"></i>New Help Article
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <!-- Help Article List -->
+                                <div class="help-list">
+                                    {% for article in help_articles_list|default([
+                                        {'id': 1, 'title': 'Getting Started', 'category': 'Tutorial', 'views': 245},
+                                        {'id': 2, 'title': 'Mining Pixels Guide', 'category': 'Gameplay', 'views': 189},
+                                        {'id': 3, 'title': 'Building Your Empire', 'category': 'Strategy', 'views': 167},
+                                        {'id': 4, 'title': 'Pixel Art Creation Tips', 'category': 'Tutorial', 'views': 132},
+                                        {'id': 5, 'title': 'Token Earning Strategies', 'category': 'Strategy', 'views': 221}
+                                    ]) %}
+                                    <div class="card mb-3 content-item">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-6">
+                                                    <h5 class="mb-0">{{ article.title }}</h5>
+                                                    <span class="badge bg-info mt-1">{{ article.category }}</span>
+                                                </div>
+                                                <div class="col-md-3 text-md-center">
+                                                    <div class="small text-muted mb-1">Views</div>
+                                                    <div class="d-flex align-items-center justify-content-md-center">
+                                                        <i class="fas fa-eye me-2 text-muted"></i>
+                                                        <span>{{ article.views }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="content-actions d-flex justify-content-end">
+                                                        <button class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#viewHelpModal">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editHelpModal">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- Help Article Editor -->
+                                <div class="card mt-4">
+                                    <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Quick Help Article</h5>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-light" type="button">
+                                                <i class="fas fa-bold"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light" type="button">
+                                                <i class="fas fa-italic"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light" type="button">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light" type="button">
+                                                <i class="fas fa-link"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light" type="button">
+                                                <i class="fas fa-image"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label class="form-label">Title</label>
+                                                <input type="text" class="form-control" placeholder="Article title">
+                                            </div>
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Category</label>
+                                                    <select class="form-select">
+                                                        <option value="Tutorial">Tutorial</option>
+                                                        <option value="Gameplay">Gameplay</option>
+                                                        <option value="Strategy">Strategy</option>
+                                                        <option value="FAQ">FAQ</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Difficulty</label>
+                                                    <select class="form-select">
+                                                        <option value="Beginner">Beginner</option>
+                                                        <option value="Intermediate">Intermediate</option>
+                                                        <option value="Advanced">Advanced</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Content</label>
+                                                <textarea class="form-control content-editor" rows="10" placeholder="Write your help article content here..."></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Preview</label>
+                                                <div class="preview-container p-3">
+                                                    <p class="text-muted text-center">Content preview will appear here...</p>
+                                                </div>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="button" class="btn btn-primary">
+                                                    <i class="fas fa-save me-2"></i>Publish Help Article
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Airdrop Tab -->
     <div class="tab-pane fade" id="airdrop" role="tabpanel" aria-labelledby="airdrop-tab">
         <div class="row mb-4">
             <!-- Airdrop Metrics -->
