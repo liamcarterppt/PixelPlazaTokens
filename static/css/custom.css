@@ -1,4 +1,4 @@
-/* Custom styling for Pixel Plaza Token Game */
+/* Custom styling for Pixel Plaza Token Game - Enhanced with responsive design */
 
 /* Global responsive adjustments */
 @media (max-width: 768px) {
@@ -324,5 +324,283 @@ a, button, .btn, .card, .nav-link, .form-control {
     }
     100% {
         transform: scale(0);
+    }
+}
+
+/* Enhanced Landing Page Styles */
+
+/* Hero Section Styles */
+.hero-section {
+    position: relative;
+    padding: 100px 0;
+    overflow: hidden;
+    background-color: rgba(33, 37, 41, 0.7);
+}
+
+.hero-bg-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(0, 123, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(40, 167, 69, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 40% 80%, rgba(23, 162, 184, 0.1) 0%, transparent 60%);
+    animation: bg-pulse 10s ease-in-out infinite alternate;
+}
+
+@keyframes bg-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+.hero-content {
+    z-index: 2;
+}
+
+/* Stats Highlight */
+.stats-highlight {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+.stat-item {
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* How It Works Section Styles */
+.how-it-works-section {
+    position: relative;
+    background-color: rgba(33, 37, 41, 0.5);
+}
+
+.step-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.step-card {
+    transition: all 0.3s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.hover-lift:hover {
+    transform: translateY(-10px);
+}
+
+/* Features Section */
+.features-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card {
+    transition: all 0.3s ease;
+}
+
+.feature-box {
+    border-radius: 10px;
+    overflow: hidden;
+    height: 100%;
+}
+
+.feature-icon-bg {
+    z-index: 0;
+    transform: rotate(-10deg) scale(2);
+    opacity: 0.05;
+    right: -20px;
+    top: -20px;
+    transition: all 0.5s ease;
+}
+
+.feature-box:hover .feature-icon-bg {
+    transform: rotate(0) scale(2.2);
+    opacity: 0.08;
+}
+
+/* Token Distribution Chart */
+.token-distribution-chart {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.token-allocation-list li {
+    transition: all 0.2s ease;
+}
+
+.token-allocation-list li:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding-left: 5px;
+}
+
+/* Timeline */
+.timeline-point {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-date {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 2px 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* CTA Section */
+.cta-section {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 800 800"><g fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"><path d="M769 229L1037 260.9M927 880L731 737 520 660 309 538 40 599 295 764 126.5 879.5 40 599-197 493 102 382-31 229 126.5 79.5-69-63"/><path d="M-31 229L237 261 390 382 731 737M520 660L309 538M295 764L126.5 879.5M-69 -63L-197 493 102 382"/> <!-- More simplified paths for better performance --> </g></svg>');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+/* Animation utilities */
+.animate__animated {
+    animation-duration: 1s;
+    animation-fill-mode: both;
+}
+
+@keyframes animate__fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes animate__fadeInDown {
+    from {
+        opacity: 0;
+        transform: translate3d(0, -20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes animate__fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes animate__fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translate3d(-20px, 0, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes animate__fadeInRight {
+    from {
+        opacity: 0;
+        transform: translate3d(20px, 0, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+/* Counter Animation */
+.counter {
+    display: inline-block;
+    animation: countUp 3s ease-out forwards;
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Adjustments for Landing Page */
+@media (max-width: 991px) {
+    .hero-section {
+        padding: 80px 0;
+    }
+    
+    .token-distribution-chart {
+        height: 180px !important;
+        margin-bottom: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    
+    .stats-highlight {
+        flex-direction: column;
+    }
+    
+    .stat-item {
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .feature-box {
+        height: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-section {
+        padding: 40px 0;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .display-5 {
+        font-size: 1.8rem;
+    }
+    
+    .lead {
+        font-size: 1rem;
+    }
+    
+    .step-icon-wrapper,
+    .icon-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .feature-box {
+        padding: 15px !important;
     }
 }
