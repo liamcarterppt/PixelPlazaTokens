@@ -463,7 +463,24 @@ def admin():
         GameState.token_balance.desc()
     ).all()
     
-    return render_template('admin.html', authenticated=True, users=users)
+    # Get current datetime for active user calculations and projections
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    
+    # Get game economy stats
+    total_tokens = sum(gs.token_balance for _, gs in users) if users else 0
+    total_pixels = sum(gs.pixels for _, gs in users) if users else 0
+    total_buildings = sum(gs.buildings_owned for _, gs in users) if users else 0
+    
+    return render_template(
+        'admin.html', 
+        authenticated=True, 
+        users=users,
+        now=now,
+        total_tokens=total_tokens,
+        total_pixels=total_pixels,
+        total_buildings=total_buildings
+    )
 
 @app.route('/export_csv')
 def export_csv():

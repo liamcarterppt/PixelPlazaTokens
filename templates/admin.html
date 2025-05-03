@@ -2,8 +2,7 @@
 
 {% block title %}Admin Dashboard{% endblock %}
 
-{% block head %}
-{{ super() }}
+{% block extra_css %}
 <!-- Chart.js for analytics -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Date range picker for filtering -->
@@ -994,8 +993,7 @@
 </div>
 {% endif %}
 
-{% block scripts %}
-{{ super() }}
+{% block extra_js %}
 <!-- Admin Dashboard Charts & Functionality -->
 <script>
 // Set up Chart.js defaults for dark theme
