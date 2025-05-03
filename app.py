@@ -6,6 +6,13 @@ import hmac
 import hashlib
 import time
 import json
+import traceback
+
+# Set up logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(name)s: %(message)s'
+)
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
@@ -214,40 +221,49 @@ def telegram_login():
 @app.route('/web-game')
 def web_game():
     """Web-based game interface compatible with Telegram UI"""
-    # Check if there's a telegram ID in the query parameters
-    telegram_id = request.args.get('id')
-    
-    # For existing Telegram users
-    if telegram_id:
-        user = User.query.filter_by(telegram_id=telegram_id).first()
-        if user:
-            game_state = GameState.query.filter_by(user_id=user.id).first()
-            if game_state:
-                # Get recent transactions
-                transactions = Transaction.query.filter_by(user_id=user.id).order_by(Transaction.timestamp.desc()).limit(5).all()
-                
-                # Get user tasks
-                user_tasks = get_user_tasks(user.id)
-                
-                # Update login task progress
-                update_task_progress(user.id, 'login', 1)
-                
-                # Check if user has a referral code
-                if not user.referral_code and game_state.level >= REFERRER_LEVEL_REQUIREMENT:
-                    user.referral_code = generate_referral_code()
-                    db.session.commit()
-                
-                return render_template(
-                    'web_game.html', 
-                    user=user, 
-                    game_state=game_state, 
-                    transactions=transactions, 
-                    tasks=user_tasks,
-                    login_required=False
-                )
-    
-    # For users who aren't logged in yet
-    return render_template('web_game.html', login_required=True, telegram_bot_username=TELEGRAM_BOT_USERNAME)
+    try:
+        # Check if there's a telegram ID in the query parameters
+        telegram_id = request.args.get('id')
+        logging.debug(f"Web game request with telegram_id: {telegram_id}")
+        
+        # For existing Telegram users
+        if telegram_id:
+            user = User.query.filter_by(telegram_id=telegram_id).first()
+            if user:
+                game_state = GameState.query.filter_by(user_id=user.id).first()
+                if game_state:
+                    # Get recent transactions
+                    transactions = Transaction.query.filter_by(user_id=user.id).order_by(Transaction.timestamp.desc()).limit(5).all()
+                    
+                    # Get user tasks
+                    user_tasks = get_user_tasks(user.id)
+                    
+                    # Update login task progress
+                    update_task_progress(user.id, 'login', 1)
+                    
+                    # Check if user has a referral code
+                    if not user.referral_code and game_state.level >= REFERRER_LEVEL_REQUIREMENT:
+                        user.referral_code = generate_referral_code()
+                        db.session.commit()
+                    
+                    logging.debug(f"Rendering web_game with user: {user.username}")
+                    return render_template(
+                        'web_game.html', 
+                        user=user, 
+                        game_state=game_state, 
+                        transactions=transactions, 
+                        tasks=user_tasks,
+                        login_required=False,
+                        telegram_bot_username=TELEGRAM_BOT_USERNAME
+                    )
+        
+        # For users who aren't logged in yet
+        logging.debug("Rendering web_game login page")
+        return render_template('web_game.html', login_required=True, telegram_bot_username=TELEGRAM_BOT_USERNAME)
+    except Exception as e:
+        logging.error(f"Error in web_game route: {str(e)}")
+        logging.error(traceback.format_exc())
+        return render_template('error.html', error_message=str(e))
 
 @app.route('/tasks')
 def tasks():

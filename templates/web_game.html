@@ -1627,7 +1627,7 @@ document.head.insertAdjacentHTML('beforeend', `
             <div class="modal-body">
                 <p class="text-muted mb-3">Connect your wallet to receive $PXPT tokens during the official token distribution.</p>
                 
-                {% if user.wallet_address %}
+                {% if not login_required and user is defined and user.wallet_address %}
                 <div class="alert alert-success">
                     <i class="fas fa-check-circle me-2"></i> Your wallet is connected!
                 </div>
@@ -1644,7 +1644,7 @@ document.head.insertAdjacentHTML('beforeend', `
                         <label for="wallet-address" class="form-label">Ethereum Wallet Address</label>
                         <input type="text" class="form-control" id="wallet-address" 
                                placeholder="0x..." 
-                               value="{{ user.wallet_address or '' }}">
+                               value="{% if not login_required and user is defined %}{{ user.wallet_address or '' }}{% endif %}">
                         <div class="form-text">Enter a valid ERC-20 compatible wallet address</div>
                     </div>
                 </form>
