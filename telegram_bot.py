@@ -641,6 +641,32 @@ async def dashboard_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         reply_markup=reply_markup,
         parse_mode='Markdown'
     )
+    
+async def webgame_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Provide web game link."""
+    telegram_id = str(update.effective_user.id)
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+    
+    if not user:
+        await update.message.reply_text("You need to start the game first! Use /start command.")
+        return
+    
+    # Generate web game link with user's Telegram ID
+    webgame_url = f"http://0.0.0.0:5000/web-game?id={telegram_id}"
+    
+    # Create button for the web game
+    keyboard = [
+        [InlineKeyboardButton("Play on Web", url=webgame_url)]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(
+        "🎮 *Pixel Plaza Web Game* 🎮\n\n"
+        "Now you can play Pixel Plaza directly in your browser! Mine, build, and collect tokens just like in the bot.\n\n"
+        "Click the button below to start playing:",
+        reply_markup=reply_markup,
+        parse_mode='Markdown'
+    )
 
 async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show the main menu with buttons."""
