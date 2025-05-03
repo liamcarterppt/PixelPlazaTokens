@@ -35,7 +35,7 @@
                         <a class="nav-link" href="{{ url_for('leaderboard') }}">Leaderboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://t.me/your_bot_username" target="_blank">Telegram Bot</a>
+                        <a class="nav-link" href="https://t.me/{{ telegram_bot_username|default('PixelPlazaTokenBot') }}" target="_blank">Telegram Bot</a>
                     </li>
                 </ul>
             </div>
@@ -72,7 +72,7 @@
                         <li><a href="{{ url_for('index') }}" class="text-decoration-none text-secondary">Home</a></li>
                         <li><a href="{{ url_for('web_game') }}" class="text-decoration-none text-secondary">Play Game</a></li>
                         <li><a href="{{ url_for('leaderboard') }}" class="text-decoration-none text-secondary">Leaderboard</a></li>
-                        <li><a href="https://t.me/your_bot_username" target="_blank" class="text-decoration-none text-secondary">Telegram Bot</a></li>
+                        <li><a href="https://t.me/{{ telegram_bot_username|default('PixelPlazaTokenBot') }}" target="_blank" class="text-decoration-none text-secondary">Telegram Bot</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">

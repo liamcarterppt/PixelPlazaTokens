@@ -168,9 +168,10 @@ def telegram_login():
             
             # Check for username conflicts
             existing_user = User.query.filter_by(username=username).first()
-            if existing_user:
-                # Append a unique identifier if username is taken
-                username = f"{username}_{telegram_id[-5:]}"
+            if existing_user and telegram_id:
+                # Append a unique identifier if username is taken and telegram_id exists
+                safe_id = telegram_id[-5:] if len(telegram_id) >= 5 else telegram_id
+                username = f"{username}_{safe_id}"
             
             # Check referral code if provided
             referral_code = request.form.get('referral_code')
@@ -226,6 +227,7 @@ def telegram_login():
     })
 
 @app.route('/web-game')
+@app.route('/web_game')  # Add an alternate URL for better UX
 def web_game():
     """Web-based game interface compatible with Telegram UI"""
     try:
