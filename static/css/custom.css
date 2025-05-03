@@ -1,0 +1,81 @@
+/* Custom styling for Pixel Plaza Token Game */
+
+/* Feature boxes on homepage */
+.feature-box {
+    background-color: rgba(33, 37, 41, 0.6);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.feature-box:hover {
+    transform: translateY(-5px);
+    background-color: rgba(33, 37, 41, 0.9);
+}
+
+/* Timeline on homepage */
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding: 0 0 30px 30px;
+    border-left: 2px solid rgba(var(--bs-info-rgb), 0.5);
+}
+
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--bs-info);
+}
+
+/* Dashboard card styling */
+.card {
+    background-color: #2a2d36;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Game action buttons hover effect */
+.game-action:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+/* Social icons in footer */
+.social-icons a:hover {
+    color: var(--bs-info) !important;
+    transition: color 0.2s ease;
+}

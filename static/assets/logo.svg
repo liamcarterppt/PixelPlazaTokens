@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Main Background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e" />
+      <stop offset="100%" stop-color="#16213e" />
+    </linearGradient>
+    
+    <!-- Token Glow -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- City Skyline Base -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#bgGradient)" />
+  
+  <!-- Pixel Grid Background Effect -->
+  <g opacity="0.1">
+    <rect x="0" y="0" width="512" height="512" fill="#ffffff" />
+    <path d="M0,32 L512,32 M0,64 L512,64 M0,96 L512,96 M0,128 L512,128 M0,160 L512,160 M0,192 L512,192 M0,224 L512,224 M0,256 L512,256 M0,288 L512,288 M0,320 L512,320 M0,352 L512,352 M0,384 L512,384 M0,416 L512,416 M0,448 L512,448 M0,480 L512,480" stroke="#ffffff" stroke-width="1" />
+    <path d="M32,0 L32,512 M64,0 L64,512 M96,0 L96,512 M128,0 L128,512 M160,0 L160,512 M192,0 L192,512 M224,0 L224,512 M256,0 L256,512 M288,0 L288,512 M320,0 L320,512 M352,0 L352,512 M384,0 L384,512 M416,0 L416,512 M448,0 L448,512 M480,0 L480,512" stroke="#ffffff" stroke-width="1" />
+  </g>
+  
+  <!-- Pixel City Skyline -->
+  <g>
+    <!-- Buildings (Each square is a "pixel") -->
+    <!-- Tall building left -->
+    <rect x="80" y="250" width="32" height="140" fill="#4cc9f0" />
+    <rect x="80" y="230" width="32" height="20" fill="#4361ee" />
+    <rect x="96" y="210" width="16" height="20" fill="#4361ee" />
+    
+    <!-- Medium building center-left -->
+    <rect x="150" y="290" width="48" height="100" fill="#3a0ca3" />
+    <rect x="150" y="260" width="16" height="30" fill="#480ca8" />
+    <rect x="166" y="260" width="16" height="30" fill="#480ca8" />
+    <rect x="182" y="260" width="16" height="30" fill="#480ca8" />
+    
+    <!-- Central tower -->
+    <rect x="240" y="190" width="64" height="200" fill="#7209b7" />
+    <rect x="248" y="150" width="48" height="40" fill="#560bad" />
+    <rect x="256" y="120" width="32" height="30" fill="#480ca8" />
+    <rect x="264" y="100" width="16" height="20" fill="#3a0ca3" />
+    
+    <!-- Medium building center-right -->
+    <rect x="340" y="270" width="40" height="120" fill="#f72585" />
+    <rect x="340" y="250" width="40" height="20" fill="#b5179e" />
+    
+    <!-- Tall building right -->
+    <rect x="420" y="230" width="24" height="160" fill="#4cc9f0" />
+    <rect x="444" y="260" width="20" height="130" fill="#4895ef" />
+    
+    <!-- Base ground -->
+    <rect x="32" y="390" width="448" height="10" fill="#560bad" />
+    
+    <!-- Windows -->
+    <g fill="#f1faee" opacity="0.7">
+      <!-- Left building windows -->
+      <rect x="88" y="260" width="8" height="8" />
+      <rect x="104" y="260" width="8" height="8" />
+      <rect x="88" y="280" width="8" height="8" />
+      <rect x="104" y="280" width="8" height="8" />
+      <rect x="88" y="300" width="8" height="8" />
+      <rect x="104" y="300" width="8" height="8" />
+      <rect x="88" y="320" width="8" height="8" />
+      <rect x="104" y="320" width="8" height="8" />
+      <rect x="88" y="340" width="8" height="8" />
+      <rect x="104" y="340" width="8" height="8" />
+      <rect x="88" y="360" width="8" height="8" />
+      <rect x="104" y="360" width="8" height="8" />
+      
+      <!-- Center-left building windows -->
+      <rect x="158" y="300" width="8" height="8" />
+      <rect x="174" y="300" width="8" height="8" />
+      <rect x="158" y="320" width="8" height="8" />
+      <rect x="174" y="320" width="8" height="8" />
+      <rect x="158" y="340" width="8" height="8" />
+      <rect x="174" y="340" width="8" height="8" />
+      <rect x="158" y="360" width="8" height="8" />
+      <rect x="174" y="360" width="8" height="8" />
+      
+      <!-- Central tower windows -->
+      <rect x="248" y="200" width="8" height="8" />
+      <rect x="264" y="200" width="8" height="8" />
+      <rect x="280" y="200" width="8" height="8" />
+      <rect x="248" y="220" width="8" height="8" />
+      <rect x="264" y="220" width="8" height="8" />
+      <rect x="280" y="220" width="8" height="8" />
+      <rect x="248" y="240" width="8" height="8" />
+      <rect x="264" y="240" width="8" height="8" />
+      <rect x="280" y="240" width="8" height="8" />
+      <rect x="248" y="260" width="8" height="8" />
+      <rect x="264" y="260" width="8" height="8" />
+      <rect x="280" y="260" width="8" height="8" />
+      <rect x="248" y="280" width="8" height="8" />
+      <rect x="264" y="280" width="8" height="8" />
+      <rect x="280" y="280" width="8" height="8" />
+      <rect x="248" y="300" width="8" height="8" />
+      <rect x="264" y="300" width="8" height="8" />
+      <rect x="280" y="300" width="8" height="8" />
+      <rect x="248" y="320" width="8" height="8" />
+      <rect x="264" y="320" width="8" height="8" />
+      <rect x="280" y="320" width="8" height="8" />
+      <rect x="248" y="340" width="8" height="8" />
+      <rect x="264" y="340" width="8" height="8" />
+      <rect x="280" y="340" width="8" height="8" />
+      <rect x="248" y="360" width="8" height="8" />
+      <rect x="264" y="360" width="8" height="8" />
+      <rect x="280" y="360" width="8" height="8" />
+      
+      <!-- Center-right building windows -->
+      <rect x="348" y="280" width="8" height="8" />
+      <rect x="364" y="280" width="8" height="8" />
+      <rect x="348" y="300" width="8" height="8" />
+      <rect x="364" y="300" width="8" height="8" />
+      <rect x="348" y="320" width="8" height="8" />
+      <rect x="364" y="320" width="8" height="8" />
+      <rect x="348" y="340" width="8" height="8" />
+      <rect x="364" y="340" width="8" height="8" />
+      <rect x="348" y="360" width="8" height="8" />
+      <rect x="364" y="360" width="8" height="8" />
+      
+      <!-- Right building windows -->
+      <rect x="428" y="240" width="8" height="8" />
+      <rect x="428" y="260" width="8" height="8" />
+      <rect x="428" y="280" width="8" height="8" />
+      <rect x="428" y="300" width="8" height="8" />
+      <rect x="428" y="320" width="8" height="8" />
+      <rect x="428" y="340" width="8" height="8" />
+      <rect x="428" y="360" width="8" height="8" />
+      <rect x="452" y="280" width="8" height="8" />
+      <rect x="452" y="300" width="8" height="8" />
+      <rect x="452" y="320" width="8" height="8" />
+      <rect x="452" y="340" width="8" height="8" />
+      <rect x="452" y="360" width="8" height="8" />
+    </g>
+  </g>
+
+  <!-- PXPT Token -->
+  <g filter="url(#glow)">
+    <circle cx="256" cy="256" r="80" fill="#ffba08" opacity="0.9" />
+    <text x="256" y="268" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#1a1a2e">$P</text>
+  </g>
+  
+  <!-- Pixel Plaza Token Text -->
+  <text x="256" y="460" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#ffffff">Pixel Plaza Token</text>
+  <text x="256" y="490" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#4cc9f0">$PXPT</text>
+</svg>

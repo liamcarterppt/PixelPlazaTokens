@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trophy-1 { color: gold; }
+    .trophy-2 { color: silver; }
+    .trophy-3 { color: #cd7f32; } /* bronze */
+    
+    .leaderboard-row {
+        transition: transform 0.2s ease;
+    }
+    .leaderboard-row:hover {
+        transform: translateX(5px);
+    }
+    
+    .leaderboard-card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Pixel Plaza Leaderboard</h1>
+        <p class="lead">Top players competing for the $PXPT airdrop</p>
+    </div>
+    <div class="col-md-4 d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+        <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-primary">
+            <i class="fab fa-telegram me-2"></i>Join the Competition
+        </a>
+    </div>
+</div>
+
+<div class="card leaderboard-card border-0 mb-5">
+    <div class="card-header bg-dark py-3">
+        <div class="row">
+            <div class="col-1 text-center">#</div>
+            <div class="col-4">Player</div>
+            <div class="col-2 text-center">Level</div>
+            <div class="col-2 text-center">Buildings</div>
+            <div class="col-3 text-end">$PXPT Balance</div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if top_users %}
+            {% for user, game_state in top_users %}
+                <div class="row py-3 px-3 leaderboard-row {% if loop.index <= 3 %}bg-dark{% endif %} border-bottom">
+                    <div class="col-1 text-center">
+                        {% if loop.index == 1 %}
+                            <i class="fas fa-trophy fa-lg trophy-1"></i>
+                        {% elif loop.index == 2 %}
+                            <i class="fas fa-trophy fa-lg trophy-2"></i>
+                        {% elif loop.index == 3 %}
+                            <i class="fas fa-trophy fa-lg trophy-3"></i>
+                        {% else %}
+                            {{ loop.index }}
+                        {% endif %}
+                    </div>
+                    <div class="col-4 d-flex align-items-center">
+                        <div>
+                            <div class="fw-bold">{{ user.username }}</div>
+                            {% if user.wallet_address %}
+                                <small class="text-muted">Wallet: {{ user.wallet_address[:6] }}...{{ user.wallet_address[-4:] }}</small>
+                            {% else %}
+                                <small class="text-danger">No wallet set</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-2 text-center">
+                        <span class="badge bg-info px-3 py-2">Level {{ game_state.level }}</span>
+                    </div>
+                    <div class="col-2 text-center">
+                        <i class="fas fa-building text-primary me-1"></i> {{ game_state.buildings_owned }}
+                    </div>
+                    <div class="col-3 text-end fw-bold">
+                        {% if loop.index <= 3 %}
+                            <span class="text-warning">{{ game_state.token_balance|round(2) }} $PXPT</span>
+                        {% else %}
+                            {{ game_state.token_balance|round(2) }} $PXPT
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="p-5 text-center">
+                <i class="fas fa-users fa-3x mb-3 text-muted"></i>
+                <h5>No players yet!</h5>
+                <p>Be the first to join the competition.</p>
+                <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-primary mt-2">
+                    <i class="fab fa-telegram me-2"></i>Join Now
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-0">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About the Leaderboard</h5>
+            </div>
+            <div class="card-body">
+                <p>The Pixel Plaza leaderboard ranks players based on their total $PXPT token balance.</p>
+                <p>Players earn tokens through various activities:</p>
+                <ul>
+                    <li>Daily rewards (streak bonuses apply)</li>
+                    <li>Mining pixels</li>
+                    <li>Creating pixel art</li>
+                    <li>Building and collecting income</li>
+                    <li>Referring new players</li>
+                </ul>
+                <p class="mb-0"><strong>Note:</strong> Only players with a registered wallet address will be eligible for the airdrop.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-0">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-gift me-2"></i>Airdrop Information</h5>
+            </div>
+            <div class="card-body">
+                <p>The $PXPT airdrop will be distributed proportionally based on the tokens earned in-game.</p>
+                <p>Total airdrop pool: <strong>1,000,000 $PXPT</strong></p>
+                <div class="mb-3">
+                    <h6>Airdrop Eligibility Requirements:</h6>
+                    <ul>
+                        <li>Register a valid ERC-20 wallet address</li>
+                        <li>Reach at least Level 5 in the game</li>
+                        <li>Own at least 1 building</li>
+                        <li>Create at least 1 pixel art</li>
+                    </ul>
+                </div>
+                <p class="mb-0">The airdrop date will be announced in our Telegram channel.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 text-center">
+        <div class="card p-4 bg-dark border-0">
+            <div class="card-body">
+                <h3 class="card-title mb-3">Ready to climb the leaderboard?</h3>
+                <p class="card-text mb-4">Join our Telegram bot and start earning $PXPT tokens!</p>
+                <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-primary btn-lg">
+                    <i class="fab fa-telegram me-2"></i> Start Playing Now
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

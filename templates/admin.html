@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Pixel Plaza Admin Panel</h1>
+    </div>
+    <div class="col-md-4 d-flex justify-content-end align-items-center">
+        {% if authenticated %}
+        <a href="{{ url_for('export_csv') }}" class="btn btn-success">
+            <i class="fas fa-file-csv me-2"></i>Export CSV
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if not authenticated %}
+<div class="row mt-5">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-0">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0">Admin Authentication</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Admin Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row mt-4">
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Game Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="card bg-dark text-center p-3">
+                            <h6>Total Users</h6>
+                            <h3>{{ users|length }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-dark text-center p-3">
+                            <h6>With Wallet</h6>
+                            <h3>{{ users|selectattr('0.wallet_address', 'defined')|list|length }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-dark text-center p-3">
+                            <h6>Buildings</h6>
+                            <h3>{{ users|sum(attribute='1.buildings_owned') }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-dark text-center p-3">
+                            <h6>Pixel Art</h6>
+                            <h3>{{ users|sum(attribute='1.pixel_art_created') }}</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6>Total $PXPT in Circulation</h6>
+                    <h3 class="text-warning">{{ users|sum(attribute='1.token_balance')|round(2) }} $PXPT</h3>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{{ url_for('export_csv') }}" class="btn btn-primary">
+                        <i class="fas fa-file-csv me-2"></i>Export Airdrop Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8 mb-4">
+        <div class="card border-0">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>User List</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Telegram ID</th>
+                                <th>Wallet</th>
+                                <th>Level</th>
+                                <th>$PXPT Balance</th>
+                                <th>Buildings</th>
+                                <th>Last Active</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user, game_state in users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.telegram_id }}</td>
+                                    <td>
+                                        {% if user.wallet_address %}
+                                            <span class="text-success">{{ user.wallet_address[:6] }}...{{ user.wallet_address[-4:] }}</span>
+                                        {% else %}
+                                            <span class="text-danger">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ game_state.level }}</td>
+                                    <td>{{ game_state.token_balance|round(2) }}</td>
+                                    <td>{{ game_state.buildings_owned }}</td>
+                                    <td>{{ game_state.last_active.strftime('%Y-%m-%d %H:%M') if game_state.last_active else 'Never' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card border-0">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Airdrop Eligibility</h5>
+            </div>
+            <div class="card-body">
+                <p>Below is a summary of users eligible for the airdrop based on the following criteria:</p>
+                <ul>
+                    <li>Has registered a wallet address</li>
+                    <li>Reached at least Level 5</li>
+                    <li>Owns at least 1 building</li>
+                    <li>Created at least 1 pixel art</li>
+                </ul>
+                
+                <div class="table-responsive mt-4">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Eligibility Factor</th>
+                                <th>Eligible Users</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Wallet Address</td>
+                                <td>{{ users|selectattr('0.wallet_address', 'defined')|list|length }}</td>
+                                <td>{{ ((users|selectattr('0.wallet_address', 'defined')|list|length / users|length) * 100)|round }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Level 5+</td>
+                                <td>{{ users|selectattr('1.level', 'ge', 5)|list|length }}</td>
+                                <td>{{ ((users|selectattr('1.level', 'ge', 5)|list|length / users|length) * 100)|round }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Own Buildings</td>
+                                <td>{{ users|selectattr('1.buildings_owned', 'ge', 1)|list|length }}</td>
+                                <td>{{ ((users|selectattr('1.buildings_owned', 'ge', 1)|list|length / users|length) * 100)|round }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Created Pixel Art</td>
+                                <td>{{ users|selectattr('1.pixel_art_created', 'ge', 1)|list|length }}</td>
+                                <td>{{ ((users|selectattr('1.pixel_art_created', 'ge', 1)|list|length / users|length) * 100)|round }}%</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>Fully Eligible</strong></td>
+                                <td>
+                                    {% set eligible_count = users|selectattr('0.wallet_address', 'defined')|selectattr('1.level', 'ge', 5)|selectattr('1.buildings_owned', 'ge', 1)|selectattr('1.pixel_art_created', 'ge', 1)|list|length %}
+                                    <strong>{{ eligible_count }}</strong>
+                                </td>
+                                <td><strong>{{ ((eligible_count / users|length) * 100)|round }}%</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

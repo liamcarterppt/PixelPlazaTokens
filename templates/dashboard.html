@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .progress {
+        height: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">Dashboard</h1>
+        <h2 class="text-primary mb-4">Welcome, {{ user.username }}!</h2>
+    </div>
+    <div class="col-md-4 d-flex align-items-center justify-content-end">
+        <button class="btn btn-outline-primary me-2" id="btn-refresh">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-primary">
+            <i class="fab fa-telegram"></i> Return to Bot
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Token Balance Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card h-100 border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-coins text-warning fa-3x mb-3"></i>
+                <h5 class="card-title">$PXPT Balance</h5>
+                <h3 class="text-warning">{{ game_state.token_balance|round(2) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card h-100 border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-star text-info fa-3x mb-3"></i>
+                <h5 class="card-title">Level</h5>
+                <h3 class="text-info">{{ game_state.level }}</h3>
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-info" role="progressbar" 
+                         style="width: {{ (game_state.experience / (game_state.level * 100)) * 100 }}%">
+                    </div>
+                </div>
+                <small class="text-muted mt-1">{{ game_state.experience }}/{{ game_state.level * 100 }} XP</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buildings Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card h-100 border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-building text-primary fa-3x mb-3"></i>
+                <h5 class="card-title">Buildings</h5>
+                <h3 class="text-primary">{{ game_state.buildings_owned }}</h3>
+                <small class="text-muted">Income: {{ game_state.buildings_owned }} $PXPT/day</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pixel Art Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card h-100 border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-palette text-danger fa-3x mb-3"></i>
+                <h5 class="card-title">Pixel Art Created</h5>
+                <h3 class="text-danger">{{ game_state.pixel_art_created }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Resources Section -->
+    <div class="col-md-4">
+        <div class="card h-100 border-0">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-box-open me-2"></i>Resources</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span><i class="fas fa-bolt text-warning me-2"></i>Energy</span>
+                        <span>{{ game_state.energy }}/100</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" 
+                             style="width: {{ (game_state.energy / 100) * 100 }}%">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span><i class="fas fa-paint-brush text-info me-2"></i>Pixels</span>
+                        <span>{{ game_state.pixels }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" role="progressbar" 
+                             style="width: {{ min((game_state.pixels / 100) * 100, 100) }}%">
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span><i class="fas fa-fire text-danger me-2"></i>Daily Streak</span>
+                        <span>{{ game_state.daily_streak }} days</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-danger" role="progressbar" 
+                             style="width: {{ min((game_state.daily_streak / 7) * 100, 100) }}%">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Actions Section -->
+    <div class="col-md-8">
+        <div class="card h-100 border-0">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-gamepad me-2"></i>Game Actions</h5>
+            </div>
+            <div class="card-body">
+                <div id="action-result" class="alert alert-info d-none"></div>
+                
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <button class="btn btn-primary w-100 h-100 py-3 game-action" data-action="daily">
+                            <i class="fas fa-calendar-day d-block mb-2 fa-lg"></i>
+                            Daily Claim
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button class="btn btn-warning w-100 h-100 py-3 game-action" data-action="mine">
+                            <i class="fas fa-hammer d-block mb-2 fa-lg"></i>
+                            Mine
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button class="btn btn-danger w-100 h-100 py-3 game-action" data-action="create">
+                            <i class="fas fa-palette d-block mb-2 fa-lg"></i>
+                            Create Art
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button class="btn btn-success w-100 h-100 py-3 game-action" data-action="build">
+                            <i class="fas fa-building d-block mb-2 fa-lg"></i>
+                            Build
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                    <div class="col-6 col-md-3">
+                        <button class="btn btn-info w-100 h-100 py-3 game-action" data-action="collect">
+                            <i class="fas fa-piggy-bank d-block mb-2 fa-lg"></i>
+                            Collect
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{{ url_for('leaderboard') }}" class="btn btn-secondary w-100 h-100 py-3">
+                            <i class="fas fa-trophy d-block mb-2 fa-lg"></i>
+                            Leaderboard
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <button class="btn btn-outline-light w-100 h-100 py-3" data-bs-toggle="modal" data-bs-target="#walletModal">
+                            <i class="fas fa-wallet d-block mb-2 fa-lg"></i>
+                            {% if user.wallet_address %}Update Wallet{% else %}Set Wallet Address{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <!-- Recent Transactions Card -->
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in transactions %}
+                                <tr>
+                                    <td>
+                                        {% if tx.type == 'daily_reward' %}
+                                            <span class="badge bg-primary">Daily</span>
+                                        {% elif tx.type == 'mining' %}
+                                            <span class="badge bg-warning">Mining</span>
+                                        {% elif tx.type == 'pixel_art' %}
+                                            <span class="badge bg-danger">Pixel Art</span>
+                                        {% elif tx.type == 'building_income' %}
+                                            <span class="badge bg-success">Income</span>
+                                        {% elif tx.type == 'building_purchase' %}
+                                            <span class="badge bg-info">Purchase</span>
+                                        {% elif tx.type == 'referral_bonus' %}
+                                            <span class="badge bg-secondary">Referral</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ tx.type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="{{ 'text-success' if tx.amount > 0 else 'text-danger' }}">
+                                        {{ tx.amount|round(2) }} $PXPT
+                                    </td>
+                                    <td>{{ tx.description }}</td>
+                                    <td>{{ tx.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-center">No transactions yet. Start playing to earn $PXPT!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wallet Address Modal -->
+<div class="modal fade" id="walletModal" tabindex="-1" aria-labelledby="walletModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="walletModalLabel">
+                    {% if user.wallet_address %}Update{% else %}Set{% endif %} Wallet Address
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Enter your ERC-20 compatible wallet address to receive $PXPT tokens during the airdrop.</p>
+                <form id="wallet-form">
+                    <div class="mb-3">
+                        <label for="wallet-address" class="form-label">Wallet Address</label>
+                        <input type="text" class="form-control" id="wallet-address" value="{{ user.wallet_address or '' }}" placeholder="0x...">
+                        <div class="form-text">Must be a valid ERC-20 compatible wallet address starting with 0x.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-wallet">Save Address</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const telegramId = '{{ user.telegram_id }}';
+    
+    // Game Actions
+    document.querySelectorAll('.game-action').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const resultEl = document.getElementById('action-result');
+            
+            // Disable all action buttons
+            document.querySelectorAll('.game-action').forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            
+            // Send action to server
+            fetch('/api/game_action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `telegram_id=${telegramId}&action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Re-enable buttons
+                document.querySelectorAll('.game-action').forEach(btn => {
+                    btn.disabled = false;
+                });
+                
+                // Reset button text
+                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-2 fa-lg"></i>${getTextForAction(action)}`;
+                
+                // Show result
+                resultEl.textContent = data.message;
+                resultEl.className = data.success ? 'alert alert-success' : 'alert alert-danger';
+                resultEl.classList.remove('d-none');
+                
+                // Update stats if successful
+                if (data.success && data.game_state) {
+                    updateGameState(data.game_state);
+                }
+                
+                // Auto-refresh after 3 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.querySelectorAll('.game-action').forEach(btn => {
+                    btn.disabled = false;
+                });
+                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-2 fa-lg"></i>${getTextForAction(action)}`;
+                resultEl.textContent = 'An error occurred. Please try again.';
+                resultEl.className = 'alert alert-danger';
+                resultEl.classList.remove('d-none');
+            });
+        });
+    });
+    
+    // Wallet form submission
+    document.getElementById('save-wallet').addEventListener('click', function() {
+        const walletAddress = document.getElementById('wallet-address').value.trim();
+        
+        // Basic validation
+        if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
+            alert('Please enter a valid ERC-20 wallet address (starting with 0x and 42 characters long)');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        
+        // Send to server
+        fetch('/api/update_wallet', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `telegram_id=${telegramId}&wallet_address=${walletAddress}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.disabled = false;
+            this.innerHTML = 'Save Address';
+            
+            if (data.success) {
+                alert('Wallet address saved successfully!');
+                document.querySelector('#walletModal .btn-close').click();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.disabled = false;
+            this.innerHTML = 'Save Address';
+            alert('An error occurred. Please try again.');
+        });
+    });
+    
+    // Refresh button
+    document.getElementById('btn-refresh').addEventListener('click', function() {
+        location.reload();
+    });
+    
+    // Helper functions
+    function getIconForAction(action) {
+        const icons = {
+            'daily': 'calendar-day',
+            'mine': 'hammer',
+            'create': 'palette',
+            'build': 'building',
+            'collect': 'piggy-bank'
+        };
+        return icons[action] || 'gamepad';
+    }
+    
+    function getTextForAction(action) {
+        const texts = {
+            'daily': 'Daily Claim',
+            'mine': 'Mine',
+            'create': 'Create Art',
+            'build': 'Build',
+            'collect': 'Collect'
+        };
+        return texts[action] || action;
+    }
+    
+    function updateGameState(gameState) {
+        // This function would update the UI with new game state values
+        // For simplicity, we're doing a full page refresh after actions
+        console.log('Updated game state:', gameState);
+    }
+});
+</script>
+{% endblock %}
