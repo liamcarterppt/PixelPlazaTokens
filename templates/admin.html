@@ -10,7 +10,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <style>
-/* Admin Dashboard Styling */
+/* Enhanced Admin Dashboard Styling with Responsive Design */
 .stat-card {
     border-radius: 10px;
     border: none;
@@ -29,6 +29,13 @@
     justify-content: center;
     border-radius: 12px;
     font-size: 24px;
+}
+@media (max-width: 767.98px) {
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
 }
 .trend-indicator {
     display: inline-flex;
@@ -55,16 +62,35 @@
     margin-bottom: 20px;
     border-radius: 10px;
 }
+@media (max-width: 767.98px) {
+    .filter-bar {
+        padding: 10px;
+    }
+}
 .admin-nav {
     background: linear-gradient(to right, #8e44ad, #3498db);
-    padding: 10px;
+    padding: 15px;
     margin: -20px -15px 20px;
     border-radius: 0 0 15px 15px;
     color: white;
 }
+@media (max-width: 767.98px) {
+    .admin-nav {
+        padding: 10px;
+        margin: -15px -15px 15px;
+    }
+    .admin-nav h2 {
+        font-size: 1.5rem;
+    }
+}
 .chart-container {
     position: relative;
     height: 300px;
+}
+@media (max-width: 767.98px) {
+    .chart-container {
+        height: 200px;
+    }
 }
 .nav-pills .nav-link.active {
     background-color: #8e44ad;
@@ -72,12 +98,72 @@
 .resource-distribution {
     height: 250px;
 }
+@media (max-width: 767.98px) {
+    .resource-distribution {
+        height: auto;
+    }
+}
 .user-action-btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
 }
 .admin-tab-content {
     padding: 20px 0;
+}
+@media (max-width: 767.98px) {
+    .admin-tab-content {
+        padding: 15px 0;
+    }
+}
+
+/* Content Management Styles */
+.content-item {
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+.content-item:hover {
+    border-left-color: #8e44ad;
+    background-color: rgba(142, 68, 173, 0.05);
+}
+.content-actions {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+.content-item:hover .content-actions {
+    opacity: 1;
+}
+.task-preview {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+}
+.task-status-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 50px;
+}
+.drag-handle {
+    cursor: move;
+    color: #6c757d;
+}
+.content-editor {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    border: 1px solid #3d3d3d;
+}
+.preview-container {
+    border: 1px dashed #6c757d;
+    border-radius: 8px;
+    min-height: 100px;
+}
+.content-nav .nav-link {
+    padding: 8px 12px;
+    border-radius: 0;
+    border-left: 3px solid transparent;
+}
+.content-nav .nav-link.active {
+    background-color: rgba(142, 68, 173, 0.1);
+    border-left-color: #8e44ad;
 }
 </style>
 {% endblock %}
@@ -119,28 +205,71 @@
 </div>
 {% else %}
 <!-- Admin Tabs -->
-<ul class="nav nav-pills mb-4" id="adminTab" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
-            <i class="fas fa-chart-line me-2"></i>Dashboard
+<!-- Admin Navigation - Enhanced for responsive design -->
+<div class="admin-navigation mb-4">
+    <!-- Desktop Navigation Pills -->
+    <ul class="nav nav-pills d-none d-md-flex" id="adminTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                <i class="fas fa-chart-line me-2"></i>Dashboard
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">
+                <i class="fas fa-users me-2"></i>User Management
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="economy-tab" data-bs-toggle="tab" data-bs-target="#economy" type="button" role="tab" aria-controls="economy" aria-selected="false">
+                <i class="fas fa-coins me-2"></i>Economy Control
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="false">
+                <i class="fas fa-edit me-2"></i>Content Management
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="airdrop-tab" data-bs-toggle="tab" data-bs-target="#airdrop" type="button" role="tab" aria-controls="airdrop" aria-selected="false">
+                <i class="fas fa-parachute-box me-2"></i>Airdrop Planning
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Mobile Navigation Dropdown -->
+    <div class="d-md-none dropdown mb-3">
+        <button class="btn btn-primary dropdown-toggle w-100" type="button" id="adminTabMobile" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bars me-2"></i>Admin Menu
         </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">
-            <i class="fas fa-users me-2"></i>User Management
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="economy-tab" data-bs-toggle="tab" data-bs-target="#economy" type="button" role="tab" aria-controls="economy" aria-selected="false">
-            <i class="fas fa-coins me-2"></i>Economy Control
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="airdrop-tab" data-bs-toggle="tab" data-bs-target="#airdrop" type="button" role="tab" aria-controls="airdrop" aria-selected="false">
-            <i class="fas fa-parachute-box me-2"></i>Airdrop Planning
-        </button>
-    </li>
-</ul>
+        <ul class="dropdown-menu w-100" aria-labelledby="adminTabMobile">
+            <li>
+                <a class="dropdown-item active" href="#dashboard" data-bs-toggle="tab" role="tab" aria-controls="dashboard" aria-selected="true">
+                    <i class="fas fa-chart-line me-2"></i>Dashboard
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#users" data-bs-toggle="tab" role="tab" aria-controls="users" aria-selected="false">
+                    <i class="fas fa-users me-2"></i>User Management
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#economy" data-bs-toggle="tab" role="tab" aria-controls="economy" aria-selected="false">
+                    <i class="fas fa-coins me-2"></i>Economy Control
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#content" data-bs-toggle="tab" role="tab" aria-controls="content" aria-selected="false">
+                    <i class="fas fa-edit me-2"></i>Content Management
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#airdrop" data-bs-toggle="tab" role="tab" aria-controls="airdrop" aria-selected="false">
+                    <i class="fas fa-parachute-box me-2"></i>Airdrop Planning
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
 
 <div class="tab-content admin-tab-content" id="adminTabContent">
     <!-- Dashboard Tab -->
