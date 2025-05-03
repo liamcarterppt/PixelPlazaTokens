@@ -1100,10 +1100,10 @@ function setupGameActions(telegramId) {
                     createFloatingReward(action, data.token_amount || 0);
                 }
                 
-                // Auto-refresh after animation completes
-                setTimeout(() => {
-                    location.reload();
-                }, 3000);
+                // Instead of reloading, update the game state dynamically
+                if (data.game_state) {
+                    updateGameStateUI(data.game_state, data.transactions, data.tasks);
+                }
             })
             .catch(error => {
                 console.error('Error:', error);

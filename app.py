@@ -535,6 +535,56 @@ def game_action():
     game_state.last_active = datetime.now()
     db.session.commit()
     
+    # Get recent transactions for the updated state
+    recent_transactions = []
+    transactions = Transaction.query.filter_by(user_id=user.id).order_by(Transaction.timestamp.desc()).limit(5).all()
+    
+    for transaction in transactions:
+        recent_transactions.append({
+            'id': transaction.id,
+            'type': transaction.type,
+            'amount': transaction.amount,
+            'description': transaction.description,
+            'timestamp': transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    
+    # Get updated user tasks
+    user_tasks_data = []
+    user_tasks = get_user_tasks(user.id)
+    for user_task, task in user_tasks:
+        user_tasks_data.append({
+            'id': user_task.id,
+            'name': task.name,
+            'description': task.description,
+            'task_type': task.task_type,
+            'objective_type': task.objective_type,
+            'objective_value': task.objective_value,
+            'current_progress': user_task.current_progress,
+            'completed': user_task.completed,
+            'token_reward': task.token_reward,
+            'pixel_reward': task.pixel_reward,
+            'experience_reward': task.experience_reward
+        })
+    
+    # Add complete game state to the result
+    result.update({
+        'game_state': {
+            'token_balance': game_state.token_balance,
+            'pixels': game_state.pixels,
+            'energy': game_state.energy,
+            'level': game_state.level,
+            'experience': game_state.experience,
+            'buildings_owned': game_state.buildings_owned,
+            'pixel_art_created': game_state.pixel_art_created,
+            'daily_streak': game_state.daily_streak,
+            'last_daily_claim': game_state.last_daily_claim.strftime('%Y-%m-%d %H:%M:%S') if game_state.last_daily_claim else None,
+            'referral_count': game_state.referral_count,
+            'tasks_completed': game_state.tasks_completed
+        },
+        'transactions': recent_transactions,
+        'tasks': user_tasks_data
+    })
+    
     return jsonify(result)
 
 @app.route('/api/update_wallet', methods=['POST'])
