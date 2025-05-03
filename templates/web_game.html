@@ -877,6 +877,67 @@
         </div>
     </div>
 </div>
+
+<!-- Mini-Games Modal -->
+<div class="modal fade" id="miniGamesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-puzzle-piece me-2"></i>Mini-Games
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="mini-games-loading" class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading mini-games...</p>
+                </div>
+                
+                <div id="mini-games-content" style="display: none;">
+                    <p class="text-info mb-3">Play mini-games to earn rewards and improve your skills!</p>
+                    
+                    <!-- Game Selection Area -->
+                    <div id="game-selection" class="mini-game-grid">
+                        <!-- Game cards will be added here dynamically -->
+                    </div>
+                    
+                    <!-- Game Play Area -->
+                    <div id="game-play-area" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 id="current-game-title">Game Title</h4>
+                            <button id="back-to-games" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Games
+                            </button>
+                        </div>
+                        
+                        <div id="game-instructions" class="alert alert-info"></div>
+                        
+                        <div id="game-container" class="p-3 bg-dark rounded mb-3">
+                            <!-- Game interface will be added here dynamically -->
+                        </div>
+                        
+                        <div id="game-controls" class="d-flex justify-content-between">
+                            <button id="restart-game" class="btn btn-warning">
+                                <i class="fas fa-sync-alt me-1"></i>Restart
+                            </button>
+                            <button id="submit-game" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>Submit
+                            </button>
+                        </div>
+                        
+                        <div id="game-result" class="mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 <!-- Bootstrap and JavaScript dependencies -->
@@ -983,6 +1044,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up wallet management
     setupWalletManagement(telegramId);
+    
+    // Set up mini-games
+    setupMiniGames(telegramId);
     
     // Initialize resource bar animations
     initResourceBars();
@@ -1635,6 +1699,928 @@ function getTextForAction(action, isMobile = false) {
             default: return action;
         }
     }
+}
+
+// ------------------------
+// Mini-Games Management
+// ------------------------
+function setupMiniGames(telegramId) {
+    // Set up mini-games button to open modal
+    const miniGamesBtn = document.getElementById('mini-games-btn');
+    if (!miniGamesBtn) return;
+    
+    miniGamesBtn.addEventListener('click', function() {
+        const miniGamesModal = new bootstrap.Modal(document.getElementById('miniGamesModal'));
+        miniGamesModal.show();
+        
+        // Load available mini-games when modal opens
+        loadAvailableMiniGames(telegramId);
+    });
+    
+    // Set up back button in the game play area
+    const backButton = document.getElementById('back-to-games');
+    if (backButton) {
+        backButton.addEventListener('click', function() {
+            document.getElementById('game-play-area').style.display = 'none';
+            document.getElementById('game-selection').style.display = 'grid';
+        });
+    }
+    
+    // Set up restart game button
+    const restartButton = document.getElementById('restart-game');
+    if (restartButton) {
+        restartButton.addEventListener('click', function() {
+            const gameType = document.getElementById('game-container').dataset.gameType;
+            if (gameType) {
+                setupGameInterface(gameType);
+            }
+        });
+    }
+    
+    // Set up submit game button
+    const submitButton = document.getElementById('submit-game');
+    if (submitButton) {
+        submitButton.addEventListener('click', function() {
+            const gameType = document.getElementById('game-container').dataset.gameType;
+            if (gameType) {
+                submitGameResult(telegramId, gameType);
+            }
+        });
+    }
+}
+
+function loadAvailableMiniGames(telegramId) {
+    // Show loading
+    document.getElementById('mini-games-loading').style.display = 'block';
+    document.getElementById('mini-games-content').style.display = 'none';
+    
+    // Fetch available games from server
+    fetch('/api/get_mini_games', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `telegram_id=${telegramId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide loading
+        document.getElementById('mini-games-loading').style.display = 'none';
+        document.getElementById('mini-games-content').style.display = 'block';
+        
+        // Display available games
+        if (data.success && data.games) {
+            displayAvailableGames(data.games, telegramId);
+        } else {
+            document.getElementById('game-selection').innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> ${data.message || 'No games available right now.'}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('mini-games-loading').style.display = 'none';
+        document.getElementById('mini-games-content').style.display = 'block';
+        document.getElementById('game-selection').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i> Failed to load mini-games. Please try again.
+            </div>
+        `;
+    });
+}
+
+function displayAvailableGames(games, telegramId) {
+    const gameSelection = document.getElementById('game-selection');
+    gameSelection.innerHTML = '';
+    
+    // If no games available
+    if (!games.length) {
+        gameSelection.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> No mini-games are available right now. Check back later!
+            </div>
+        `;
+        return;
+    }
+    
+    // Display each available game
+    games.forEach(game => {
+        const gameCard = document.createElement('div');
+        gameCard.className = 'mini-game-card p-3';
+        
+        // Create game icon based on type
+        let gameIcon = '';
+        switch (game.type) {
+            case 'pixel_match':
+                gameIcon = 'clone';
+                break;
+            case 'token_puzzle':
+                gameIcon = 'puzzle-piece';
+                break;
+            case 'resource_rush':
+                gameIcon = 'meteor';
+                break;
+            case 'gem_hunter':
+                gameIcon = 'gem';
+                break;
+            case 'pattern_predictor':
+                gameIcon = 'chart-line';
+                break;
+            default:
+                gameIcon = 'gamepad';
+        }
+        
+        // Show cooldown overlay if on cooldown
+        let cooldownOverlay = '';
+        if (game.on_cooldown) {
+            cooldownOverlay = `
+                <div class="cooldown">
+                    <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
+                    <p class="mb-1">On Cooldown</p>
+                    <p class="small text-muted">${game.cooldown_text}</p>
+                </div>
+            `;
+        }
+        
+        // Fill card with game info
+        gameCard.innerHTML = `
+            ${cooldownOverlay}
+            <div class="text-center mb-3">
+                <span class="icon-circle bg-${getGameColor(game.type)} mb-2">
+                    <i class="fas fa-${gameIcon} fa-2x"></i>
+                </span>
+                <h5>${game.name}</h5>
+            </div>
+            <p class="small mb-3">${game.description}</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+                <span class="badge bg-${getGameColor(game.type)}">
+                    <i class="fas fa-star me-1"></i> ${game.difficulty || 'Easy'}
+                </span>
+                <button class="btn btn-sm btn-primary play-game-btn" data-game-type="${game.type}"
+                    ${game.on_cooldown ? 'disabled' : ''}>
+                    Play Game
+                </button>
+            </div>
+        `;
+        
+        // Add to game selection
+        gameSelection.appendChild(gameCard);
+    });
+    
+    // Add event listeners to play buttons
+    document.querySelectorAll('.play-game-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const gameType = this.dataset.gameType;
+            playMiniGame(gameType, telegramId);
+        });
+    });
+}
+
+function playMiniGame(gameType, telegramId) {
+    // Hide game selection, show play area
+    document.getElementById('game-selection').style.display = 'none';
+    document.getElementById('game-play-area').style.display = 'block';
+    document.getElementById('game-result').style.display = 'none';
+    
+    // Set title based on game type
+    let gameTitle = '';
+    let gameInstructions = '';
+    
+    switch (gameType) {
+        case 'pixel_match':
+            gameTitle = 'Pixel Match';
+            gameInstructions = 'Match pairs of identical pixel patterns by selecting them in sequence. Find all matches before time runs out!';
+            break;
+        case 'token_puzzle':
+            gameTitle = 'Token Puzzle';
+            gameInstructions = 'Arrange the tokens in numerical order by sliding them into the empty space. Complete the puzzle as quickly as possible!';
+            break;
+        case 'resource_rush':
+            gameTitle = 'Resource Rush';
+            gameInstructions = 'Collect falling resources by clicking on them before they hit the ground. Different resources have different values!';
+            break;
+        case 'gem_hunter':
+            gameTitle = 'Gem Hunter';
+            gameInstructions = 'Search for hidden gems in the grid. Use clues to determine where the gems are located with minimal attempts.';
+            break;
+        case 'pattern_predictor':
+            gameTitle = 'Pattern Predictor';
+            gameInstructions = 'Analyze the pattern and predict the next element in the sequence. Higher difficulty patterns yield better rewards!';
+            break;
+        default:
+            gameTitle = 'Mini-Game';
+            gameInstructions = 'Complete the game challenges to earn rewards!';
+    }
+    
+    // Update UI
+    document.getElementById('current-game-title').textContent = gameTitle;
+    document.getElementById('game-instructions').textContent = gameInstructions;
+    
+    // Setup game-specific interface
+    setupGameInterface(gameType);
+}
+
+function setupGameInterface(gameType) {
+    const gameContainer = document.getElementById('game-container');
+    gameContainer.dataset.gameType = gameType;
+    
+    // Clear previous game content
+    gameContainer.innerHTML = '';
+    
+    // Setup specific game interface based on type
+    switch (gameType) {
+        case 'pixel_match':
+            setupPixelMatchGame(gameContainer);
+            break;
+        case 'token_puzzle':
+            setupTokenPuzzleGame(gameContainer);
+            break;
+        case 'resource_rush':
+            setupResourceRushGame(gameContainer);
+            break;
+        case 'gem_hunter':
+            setupGemHunterGame(gameContainer);
+            break;
+        case 'pattern_predictor':
+            setupPatternPredictorGame(gameContainer);
+            break;
+        default:
+            gameContainer.innerHTML = '<div class="alert alert-warning">Game not implemented yet.</div>';
+    }
+}
+
+function submitGameResult(telegramId, gameType) {
+    // Collect game-specific data
+    let gameData = {};
+    
+    switch (gameType) {
+        case 'pixel_match':
+            gameData = collectPixelMatchData();
+            break;
+        case 'token_puzzle':
+            gameData = collectTokenPuzzleData();
+            break;
+        case 'resource_rush':
+            gameData = collectResourceRushData();
+            break;
+        case 'gem_hunter':
+            gameData = collectGemHunterData();
+            break;
+        case 'pattern_predictor':
+            gameData = collectPatternPredictorData();
+            break;
+        default:
+            gameData = {};
+    }
+    
+    // Show loading state
+    const submitButton = document.getElementById('submit-game');
+    const originalText = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`;
+    
+    // Send to server
+    fetch('/api/play_mini_game', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            telegram_id: telegramId,
+            game_type: gameType,
+            game_data: gameData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+        
+        // Display result
+        const resultElement = document.getElementById('game-result');
+        
+        if (data.success) {
+            // Success case
+            resultElement.className = 'alert alert-success mt-3';
+            
+            // Format rewards
+            let rewardsText = '';
+            if (data.rewards.tokens > 0) rewardsText += `<span class="badge bg-warning me-1">+${data.rewards.tokens.toFixed(2)} $PXPT</span>`;
+            if (data.rewards.pixels > 0) rewardsText += `<span class="badge bg-info me-1">+${data.rewards.pixels} Pixels</span>`;
+            if (data.rewards.materials > 0) rewardsText += `<span class="badge bg-secondary me-1">+${data.rewards.materials} Materials</span>`;
+            if (data.rewards.gems > 0) rewardsText += `<span class="badge bg-danger me-1">+${data.rewards.gems} Gems</span>`;
+            if (data.rewards.xp > 0) rewardsText += `<span class="badge bg-success me-1">+${data.rewards.xp} XP</span>`;
+            
+            resultElement.innerHTML = `
+                <h5 class="mb-2"><i class="fas fa-check-circle me-2"></i>${data.message || 'Game completed successfully!'}</h5>
+                <p class="mb-1">You earned:</p>
+                <div class="mb-2">${rewardsText}</div>
+                <p class="mb-0 small text-muted">Score: ${data.score || 0}</p>
+            `;
+            
+            // Update token display if rewards include tokens
+            if (data.rewards.tokens > 0) {
+                updateTokenDisplay(data.rewards.tokens, true);
+            }
+            
+            // Create floating reward animation
+            createFloatingReward('mini-game', data.rewards.tokens || 0);
+            
+            // Update game state if provided
+            if (data.game_state) {
+                updateGameStateUI(data.game_state, data.transactions, null);
+            }
+        } else {
+            // Error case
+            resultElement.className = 'alert alert-danger mt-3';
+            resultElement.innerHTML = `
+                <h5 class="mb-2"><i class="fas fa-exclamation-circle me-2"></i>Game Submission Failed</h5>
+                <p class="mb-0">${data.message || 'Unable to process game result. Please try again.'}</p>
+            `;
+        }
+        
+        resultElement.style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+        
+        // Show error
+        const resultElement = document.getElementById('game-result');
+        resultElement.className = 'alert alert-danger mt-3';
+        resultElement.innerHTML = `
+            <h5 class="mb-2"><i class="fas fa-exclamation-circle me-2"></i>Error</h5>
+            <p class="mb-0">Failed to submit game result. Please try again.</p>
+        `;
+        resultElement.style.display = 'block';
+    });
+}
+
+// Game-specific setup functions
+function setupPixelMatchGame(container) {
+    // Simple placeholder implementation
+    const cards = [];
+    const pixelPatterns = ['🟥', '🟦', '🟩', '🟨', '🟪', '⬛', '⬜', '🟧'];
+    
+    // Create pairs of cards
+    for (let i = 0; i < 8; i++) {
+        cards.push({ id: i, value: pixelPatterns[i % pixelPatterns.length] });
+        cards.push({ id: i + 8, value: pixelPatterns[i % pixelPatterns.length] });
+    }
+    
+    // Shuffle cards
+    cards.sort(() => Math.random() - 0.5);
+    
+    // Build game board
+    container.innerHTML = `
+        <div class="pixel-match-container">
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <div class="alert alert-info">Memory Challenge: Match pixel pairs!</div>
+                </div>
+            </div>
+            <div class="row pixel-match-board" id="pixel-match-board">
+                ${cards.map(card => `
+                    <div class="col-3 mb-2">
+                        <div class="pixel-card" data-card-id="${card.id}" data-value="${card.value}">
+                            <div class="pixel-card-back">?</div>
+                            <div class="pixel-card-front">${card.value}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Add CSS for the game
+    const style = document.createElement('style');
+    style.textContent = `
+        .pixel-match-board { margin: 0 -5px; }
+        .pixel-card {
+            height: 60px;
+            background-color: #2a2d35;
+            border-radius: 8px;
+            cursor: pointer;
+            perspective: 1000px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        .pixel-card:hover { transform: translateY(-2px); }
+        .pixel-card-front, .pixel-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        .pixel-card-back {
+            background-color: #3a3f4b;
+            z-index: 2;
+        }
+        .pixel-card-front {
+            z-index: 1;
+            transform: rotateY(180deg);
+        }
+        .pixel-card.flipped .pixel-card-back {
+            transform: rotateY(180deg);
+        }
+        .pixel-card.flipped .pixel-card-front {
+            transform: rotateY(0deg);
+        }
+        .pixel-card.matched {
+            background-color: rgba(40, 167, 69, 0.2);
+            cursor: default;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Add game logic
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let playerChoices = [];
+    
+    document.querySelectorAll('.pixel-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const cardId = this.dataset.cardId;
+            const cardValue = this.dataset.value;
+            
+            // Ignore if already flipped or matched
+            if (this.classList.contains('flipped') || this.classList.contains('matched')) {
+                return;
+            }
+            
+            // Ignore if two cards already flipped
+            if (flippedCards.length >= 2) {
+                return;
+            }
+            
+            // Flip the card
+            this.classList.add('flipped');
+            flippedCards.push({
+                element: this,
+                value: cardValue,
+                id: cardId
+            });
+            
+            // Record player choice
+            playerChoices.push(parseInt(cardId));
+            
+            // Check for match if two cards flipped
+            if (flippedCards.length === 2) {
+                if (flippedCards[0].value === flippedCards[1].value) {
+                    // Match found
+                    setTimeout(() => {
+                        flippedCards[0].element.classList.add('matched');
+                        flippedCards[1].element.classList.add('matched');
+                        flippedCards = [];
+                        matchedPairs++;
+                        
+                        // Check if game completed
+                        if (matchedPairs === 8) {
+                            container.querySelector('.alert').innerHTML = `
+                                <i class="fas fa-check-circle me-2"></i> Great job! You found all matches.
+                            `;
+                        }
+                    }, 500);
+                } else {
+                    // No match
+                    setTimeout(() => {
+                        flippedCards[0].element.classList.remove('flipped');
+                        flippedCards[1].element.classList.remove('flipped');
+                        flippedCards = [];
+                    }, 1000);
+                }
+            }
+        });
+    });
+}
+
+// Placeholder implementations for other game setups
+function setupTokenPuzzleGame(container) {
+    container.innerHTML = `
+        <div class="alert alert-info">Arrange the tokens in numerical order by sliding them into the empty space.</div>
+        <div class="token-puzzle-board" id="token-puzzle-board">
+            <!-- Token puzzle board will be generated here -->
+        </div>
+    `;
+    
+    // Create puzzle board
+    const puzzleSize = 3;
+    const puzzleBoard = document.getElementById('token-puzzle-board');
+    
+    // Create grid style
+    const style = document.createElement('style');
+    style.textContent = `
+        .token-puzzle-board {
+            display: grid;
+            grid-template-columns: repeat(${puzzleSize}, 1fr);
+            grid-gap: 8px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .token-tile {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #3a3f4b;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .token-tile:hover:not(.empty) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .token-tile.empty {
+            background-color: transparent;
+            cursor: default;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Generate numbers 1-8 plus empty
+    let numbers = Array.from({length: puzzleSize*puzzleSize-1}, (_, i) => i + 1);
+    numbers.push(''); // Empty space
+    
+    // Shuffle but ensure solvable
+    // For simplicity in this implementation
+    numbers.sort(() => Math.random() - 0.5);
+    
+    // Create tiles
+    puzzleBoard.innerHTML = '';
+    numbers.forEach(num => {
+        const tile = document.createElement('div');
+        tile.className = `token-tile ${num === '' ? 'empty' : ''}`;
+        tile.dataset.value = num;
+        tile.textContent = num;
+        puzzleBoard.appendChild(tile);
+    });
+    
+    // Simple sliding logic
+    puzzleBoard.addEventListener('click', function(e) {
+        if (e.target.classList.contains('token-tile') && !e.target.classList.contains('empty')) {
+            const emptyTile = document.querySelector('.token-tile.empty');
+            const clickedTile = e.target;
+            
+            // Check if adjacent to empty tile (simplified)
+            if (isAdjacent(clickedTile, emptyTile, puzzleSize)) {
+                // Swap with empty tile
+                const tempValue = clickedTile.dataset.value;
+                const tempText = clickedTile.textContent;
+                
+                clickedTile.dataset.value = '';
+                clickedTile.textContent = '';
+                clickedTile.classList.add('empty');
+                
+                emptyTile.dataset.value = tempValue;
+                emptyTile.textContent = tempText;
+                emptyTile.classList.remove('empty');
+            }
+        }
+    });
+}
+
+function setupResourceRushGame(container) {
+    container.innerHTML = `
+        <div class="alert alert-info">Click on falling resources to collect them before they reach the bottom!</div>
+        <div class="resource-rush-container">
+            <div class="resource-rush-score">Score: <span id="rush-score">0</span></div>
+            <div class="resource-rush-game" id="resource-rush-game"></div>
+        </div>
+    `;
+    
+    // Add game styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .resource-rush-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border: 1px solid #3a3f4b;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #1a1d24;
+        }
+        .resource-rush-score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            z-index: 5;
+        }
+        .resource-rush-game {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .falling-resource {
+            position: absolute;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 2;
+            user-select: none;
+        }
+        .falling-resource:hover {
+            transform: scale(1.2);
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Simple placeholder implementation
+    const gameArea = document.getElementById('resource-rush-game');
+    const scoreDisplay = document.getElementById('rush-score');
+    let score = 0;
+    const resourceTypes = [
+        { emoji: '💎', value: 5, speed: 3 },
+        { emoji: '🧱', value: 2, speed: 2 },
+        { emoji: '🎨', value: 3, speed: 2.5 },
+        { emoji: '💰', value: 4, speed: 2.8 }
+    ];
+    
+    // Spawn resources periodically
+    let gameInterval = setInterval(() => {
+        spawnResource(gameArea, resourceTypes[Math.floor(Math.random() * resourceTypes.length)]);
+    }, 1000);
+    
+    // Clear interval when modal is closed
+    document.getElementById('miniGamesModal').addEventListener('hidden.bs.modal', function() {
+        clearInterval(gameInterval);
+    });
+    
+    // Function to spawn a resource
+    function spawnResource(gameArea, resourceType) {
+        const resource = document.createElement('div');
+        resource.className = 'falling-resource';
+        resource.textContent = resourceType.emoji;
+        resource.dataset.value = resourceType.value;
+        
+        // Random x position
+        const xPos = Math.random() * (gameArea.offsetWidth - 40);
+        resource.style.left = `${xPos}px`;
+        resource.style.top = '0px';
+        
+        gameArea.appendChild(resource);
+        
+        // Make it fall
+        let pos = 0;
+        const fallInterval = setInterval(() => {
+            pos += resourceType.speed;
+            resource.style.top = `${pos}px`;
+            
+            // Check if reached bottom
+            if (pos > gameArea.offsetHeight - 40) {
+                clearInterval(fallInterval);
+                resource.remove();
+            }
+        }, 50);
+        
+        // Click to collect
+        resource.addEventListener('click', function() {
+            clearInterval(fallInterval);
+            score += parseInt(this.dataset.value);
+            scoreDisplay.textContent = score;
+            
+            // Create collection animation
+            this.style.transition = 'all 0.3s';
+            this.style.transform = 'scale(1.5)';
+            this.style.opacity = '0';
+            
+            setTimeout(() => {
+                this.remove();
+            }, 300);
+        });
+    }
+}
+
+function setupGemHunterGame(container) {
+    container.innerHTML = `
+        <div class="alert alert-info">Search for hidden gems! The number shows nearby gems.</div>
+        <div class="gem-hunter-board" id="gem-hunter-board"></div>
+    `;
+    
+    // Simple implementation
+    const boardSize = 5;
+    const numGems = 5;
+    
+    // Create CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        .gem-hunter-board {
+            display: grid;
+            grid-template-columns: repeat(${boardSize}, 1fr);
+            grid-gap: 8px;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+        .gem-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #3a3f4b;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .gem-cell:hover:not(.revealed) {
+            background-color: #4a4f5b;
+        }
+        .gem-cell.revealed {
+            background-color: #2a2d35;
+            cursor: default;
+        }
+        .gem-cell.gem {
+            background-color: #9b59b6;
+            color: white;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Create a simple grid
+    const boardElement = document.getElementById('gem-hunter-board');
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+            const cell = document.createElement('div');
+            cell.className = 'gem-cell';
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            
+            // Randomly assign gems
+            if (Math.random() < 0.2 && numGems > 0) {
+                cell.dataset.isGem = 'true';
+            } else {
+                cell.dataset.isGem = 'false';
+            }
+            
+            // Click event
+            cell.addEventListener('click', function() {
+                if (this.classList.contains('revealed')) return;
+                
+                this.classList.add('revealed');
+                
+                if (this.dataset.isGem === 'true') {
+                    this.classList.add('gem');
+                    this.innerHTML = '💎';
+                } else {
+                    this.textContent = '';
+                }
+            });
+            
+            boardElement.appendChild(cell);
+        }
+    }
+}
+
+function setupPatternPredictorGame(container) {
+    container.innerHTML = `
+        <div class="alert alert-info">Predict the next value in the pattern sequence.</div>
+        <div class="pattern-container p-3 text-center">
+            <div class="pattern-sequence mb-4" id="pattern-sequence"></div>
+            <div class="pattern-input mb-3">
+                <label for="pattern-answer" class="form-label">What's the next value?</label>
+                <input type="text" class="form-control" id="pattern-answer" placeholder="Enter your answer">
+            </div>
+        </div>
+    `;
+    
+    // Generate a simple pattern
+    const patterns = [
+        // Arithmetic sequence
+        {
+            sequence: [2, 4, 6, 8, 10],
+            next: 12,
+            description: "Simple +2 pattern"
+        },
+        // Geometric sequence
+        {
+            sequence: [3, 6, 12, 24, 48],
+            next: 96,
+            description: "Doubling pattern"
+        },
+        // Fibonacci-like
+        {
+            sequence: [1, 1, 2, 3, 5],
+            next: 8,
+            description: "Sum of previous two"
+        }
+    ];
+    
+    // Randomly choose a pattern
+    const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+    
+    // Display the pattern
+    document.getElementById('pattern-sequence').innerHTML = `
+        <h4 class="mb-3">Pattern:</h4>
+        <div class="pattern-display p-3 bg-dark rounded">
+            <span class="fs-4">${pattern.sequence.join(', ')}, ?</span>
+        </div>
+    `;
+    
+    // Store the answer in the container
+    container.dataset.patternAnswer = pattern.next;
+}
+
+// Helper functions for mini-games
+function getGameColor(gameType) {
+    switch (gameType) {
+        case 'pixel_match': return 'info';
+        case 'token_puzzle': return 'warning';
+        case 'resource_rush': return 'danger';
+        case 'gem_hunter': return 'purple';
+        case 'pattern_predictor': return 'success';
+        default: return 'primary';
+    }
+}
+
+function isAdjacent(tile1, tile2, size) {
+    const tiles = Array.from(document.querySelectorAll('.token-tile'));
+    const index1 = tiles.indexOf(tile1);
+    const index2 = tiles.indexOf(tile2);
+    
+    // Check horizontal adjacency
+    if (Math.abs(index1 - index2) === 1 && Math.floor(index1 / size) === Math.floor(index2 / size)) {
+        return true;
+    }
+    
+    // Check vertical adjacency
+    if (Math.abs(index1 - index2) === size) {
+        return true;
+    }
+    
+    return false;
+}
+
+// Data collection for game submissions
+function collectPixelMatchData() {
+    return {
+        player_choices: Array.from(document.querySelectorAll('.pixel-card.flipped, .pixel-card.matched'))
+            .map(card => parseInt(card.dataset.cardId)),
+        matched_pairs: document.querySelectorAll('.pixel-card.matched').length / 2
+    };
+}
+
+function collectTokenPuzzleData() {
+    const tiles = document.querySelectorAll('.token-tile');
+    const solution = Array.from(tiles).map(tile => tile.dataset.value || '');
+    
+    return {
+        player_solution: solution
+    };
+}
+
+function collectResourceRushData() {
+    const score = parseInt(document.getElementById('rush-score')?.textContent || '0');
+    
+    return {
+        resources_collected: score,
+        score: score
+    };
+}
+
+function collectGemHunterData() {
+    const revealedCells = document.querySelectorAll('.gem-cell.revealed');
+    const selectedCells = Array.from(revealedCells).map(cell => ({
+        row: parseInt(cell.dataset.row),
+        col: parseInt(cell.dataset.col),
+        is_gem: cell.classList.contains('gem')
+    }));
+    
+    return {
+        selected_cells: selectedCells,
+        gems_found: document.querySelectorAll('.gem-cell.gem').length
+    };
+}
+
+function collectPatternPredictorData() {
+    const playerAnswer = document.getElementById('pattern-answer').value.trim();
+    const correctAnswer = document.getElementById('game-container').dataset.patternAnswer;
+    
+    return {
+        player_answer: playerAnswer,
+        correct_answer: correctAnswer,
+        is_correct: playerAnswer === correctAnswer
+    };
 }
 
 // Add CSS-only Button Ripple Effect
