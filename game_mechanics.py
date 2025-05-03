@@ -7,7 +7,8 @@ from config import (
     DAILY_REWARD, DAILY_STREAK_BONUS, 
     MINING_REWARD_MIN, MINING_REWARD_MAX, MINING_ENERGY_COST, MINING_PIXEL_GAIN,
     ART_TOKEN_REWARD_MIN, ART_TOKEN_REWARD_MAX, ART_ENERGY_COST, ART_PIXEL_COST,
-    BUILDING_COST_BASE, BUILDING_COST_MULTIPLIER, BUILDING_INCOME_BASE, COLLECTION_COOLDOWN_HOURS
+    BUILDING_COST_BASE, BUILDING_COST_MULTIPLIER, BUILDING_INCOME_BASE, COLLECTION_COOLDOWN_HOURS,
+    XP_PER_LEVEL
 )
 
 logger = logging.getLogger(__name__)
@@ -153,10 +154,10 @@ class GameMechanics:
         
         return {
             "success": True,
-            "message": f"Mining successful! +{reward} $PXPT, +{pixels_found} Pixels",
+            "message": f"Mining successful! +{reward} $PXPT, +{MINING_PIXEL_GAIN} Pixels",
             "reward": reward,
-            "pixels_found": pixels_found,
-            "energy_used": 10,
+            "pixels_found": MINING_PIXEL_GAIN,
+            "energy_used": MINING_ENERGY_COST,
             "xp_gained": 5,
             "level_up": level_up,
             "game_state": self._get_game_state_dict(game_state)
@@ -165,29 +166,29 @@ class GameMechanics:
     def _process_pixel_art(self, user, game_state):
         """Process pixel art creation action."""
         # Check if user has enough pixels and energy
-        if game_state.pixels < PIXEL_ART_COST:
+        if game_state.pixels < ART_PIXEL_COST:
             return {
                 "success": False,
-                "message": f"Not enough pixels! Current: {game_state.pixels}, Need: {PIXEL_ART_COST}",
+                "message": f"Not enough pixels! Current: {game_state.pixels}, Need: {ART_PIXEL_COST}",
                 "game_state": self._get_game_state_dict(game_state)
             }
         
-        if game_state.energy < 15:
+        if game_state.energy < ART_ENERGY_COST:
             return {
                 "success": False,
-                "message": f"Not enough energy! Current: {game_state.energy}/100, Need: 15",
+                "message": f"Not enough energy! Current: {game_state.energy}/100, Need: {ART_ENERGY_COST}",
                 "game_state": self._get_game_state_dict(game_state)
             }
         
         # Calculate reward with some randomness
-        base_reward = PIXEL_ART_REWARD * game_state.level
-        quality_factor = random.uniform(0.9, 1.5)  # Represents art quality
-        reward = round(base_reward * quality_factor, 2)
+        base_reward = ART_TOKEN_REWARD_MIN + (game_state.level * 0.5)
+        max_reward = ART_TOKEN_REWARD_MAX + (game_state.level * 0.5)
+        reward = round(random.uniform(base_reward, max_reward), 2)
         
         # Update game state
         game_state.token_balance += reward
-        game_state.pixels -= PIXEL_ART_COST
-        game_state.energy -= 15
+        game_state.pixels -= ART_PIXEL_COST
+        game_state.energy -= ART_ENERGY_COST
         game_state.pixel_art_created += 1
         game_state.experience += 10
         
@@ -213,8 +214,8 @@ class GameMechanics:
             "success": True,
             "message": f"Pixel art created! +{reward} $PXPT",
             "reward": reward,
-            "pixels_used": PIXEL_ART_COST,
-            "energy_used": 15,
+            "pixels_used": ART_PIXEL_COST,
+            "energy_used": ART_ENERGY_COST,
             "xp_gained": 10,
             "level_up": level_up,
             "game_state": self._get_game_state_dict(game_state)
@@ -223,7 +224,8 @@ class GameMechanics:
     def _process_building(self, user, game_state):
         """Process building purchase action."""
         # Calculate building cost (increases with more buildings)
-        building_cost = BUILDING_COST + (game_state.buildings_owned * 10)
+        building_cost = BUILDING_COST_BASE * (BUILDING_COST_MULTIPLIER ** game_state.buildings_owned)
+        building_cost = round(building_cost, 2)
         
         # Check if user has enough tokens
         if game_state.token_balance < building_cost:
@@ -261,7 +263,7 @@ class GameMechanics:
             "message": f"Building purchased! Cost: {building_cost} $PXPT",
             "cost": building_cost,
             "buildings_owned": game_state.buildings_owned,
-            "daily_income": BUILDING_INCOME * game_state.buildings_owned,
+            "daily_income": BUILDING_INCOME_BASE * game_state.buildings_owned,
             "xp_gained": 20,
             "level_up": level_up,
             "game_state": self._get_game_state_dict(game_state)
@@ -284,8 +286,10 @@ class GameMechanics:
             type='building_income'
         ).order_by(Transaction.timestamp.desc()).first()
         
-        if last_transaction and (now - last_transaction.timestamp).seconds < 86400:  # 24 hours in seconds
-            next_collection_time = last_transaction.timestamp + timedelta(days=1)
+        cooldown_seconds = COLLECTION_COOLDOWN_HOURS * 3600  # Convert hours to seconds
+        
+        if last_transaction and (now - last_transaction.timestamp).seconds < cooldown_seconds:
+            next_collection_time = last_transaction.timestamp + timedelta(hours=COLLECTION_COOLDOWN_HOURS)
             hours_remaining = (next_collection_time - now).seconds // 3600
             minutes_remaining = ((next_collection_time - now).seconds % 3600) // 60
             
@@ -296,7 +300,7 @@ class GameMechanics:
             }
         
         # Calculate income
-        income = BUILDING_INCOME * game_state.buildings_owned
+        income = BUILDING_INCOME_BASE * game_state.buildings_owned
         
         # Update game state
         game_state.token_balance += income

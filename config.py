@@ -165,6 +165,9 @@ BUILDING_COST_MULTIPLIER = 1.5
 BUILDING_INCOME_BASE = 1
 COLLECTION_COOLDOWN_HOURS = 4
 
+# Progression
+XP_PER_LEVEL = 100  # Experience points needed per level
+
 # Token Economy
 MAX_SUPPLY = 1000000  # Maximum token supply
 AIRDROP_ALLOCATION = 100000  # Tokens allocated for airdrop
