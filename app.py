@@ -591,6 +591,78 @@ def game_action():
     
     return jsonify(result)
 
+@app.route('/api/mini-games/available', methods=['POST'])
+def get_available_mini_games():
+    """API endpoint to get available mini-games for a user"""
+    telegram_id = request.form.get('telegram_id')
+    
+    if not telegram_id:
+        return jsonify({"success": False, "message": "Telegram ID is required"})
+    
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+    if not user:
+        return jsonify({"success": False, "message": "User not found"})
+    
+    game_state = GameState.query.filter_by(user_id=user.id).first()
+    if not game_state:
+        return jsonify({"success": False, "message": "Game state not found"})
+    
+    # Get available games
+    available_games = mini_games.get_available_games(user, game_state)
+    
+    return jsonify({
+        "success": True,
+        "games": available_games
+    })
+
+@app.route('/api/mini-games/play', methods=['POST'])
+def play_mini_game():
+    """API endpoint to play a mini-game"""
+    telegram_id = request.form.get('telegram_id')
+    game_type = request.form.get('game_type')
+    game_data_json = request.form.get('game_data', '{}')
+    
+    try:
+        game_data = json.loads(game_data_json)
+    except json.JSONDecodeError:
+        game_data = {}
+    
+    if not telegram_id or not game_type:
+        return jsonify({"success": False, "message": "Telegram ID and game type are required"})
+    
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+    if not user:
+        return jsonify({"success": False, "message": "User not found"})
+    
+    game_state = GameState.query.filter_by(user_id=user.id).first()
+    if not game_state:
+        return jsonify({"success": False, "message": "Game state not found"})
+    
+    # Play the selected mini-game
+    result = mini_games.play_game(user, game_state, game_type, game_data)
+    
+    # Update task progress if game was successful
+    if result.get('success', False) and 'score' in result and result['score'] > 0:
+        update_task_progress(user.id, 'mini_game', 1)
+    
+    # Get recent transactions for the updated state
+    recent_transactions = []
+    if result.get('success', False):
+        transactions = Transaction.query.filter_by(user_id=user.id).order_by(Transaction.timestamp.desc()).limit(5).all()
+        for transaction in transactions:
+            recent_transactions.append({
+                'id': transaction.id,
+                'type': transaction.type,
+                'amount': transaction.amount,
+                'description': transaction.description,
+                'timestamp': transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            })
+    
+    # Add transactions to result
+    result['transactions'] = recent_transactions
+    
+    return jsonify(result)
+
 @app.route('/api/update_wallet', methods=['POST'])
 def update_wallet():
     telegram_id = request.form.get('telegram_id')

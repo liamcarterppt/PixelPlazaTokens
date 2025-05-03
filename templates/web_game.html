@@ -451,6 +451,66 @@
         display: block;
     }
     
+    /* Purple button style for mini-games */
+    .btn-purple {
+        background-color: #9b59b6;
+        color: white;
+    }
+    
+    .btn-purple:hover {
+        background-color: #8e44ad;
+        color: white;
+    }
+    
+    /* Mini-games styles */
+    .mini-game-card {
+        border-radius: var(--card-radius);
+        background-color: var(--game-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .mini-game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        border-color: var(--game-accent);
+    }
+    
+    .mini-game-card .cooldown {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+    
+    .mini-game-grid {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 20px;
+    }
+    
+    @media (min-width: 576px) {
+        .mini-game-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .mini-game-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
     /* Game Navbar */
     .game-navbar {
         display: flex;
@@ -721,6 +781,10 @@
             <button class="btn btn-secondary game-action-btn" id="wallet-btn">
                 <i class="fas fa-wallet"></i>
                 <span>Wallet</span>
+            </button>
+            <button class="btn btn-purple game-action-btn" id="mini-games-btn">
+                <i class="fas fa-puzzle-piece"></i>
+                <span>Mini-Games</span>
             </button>
         </div>
         
