@@ -4,49 +4,427 @@
 
 {% block extra_css %}
 <style>
+    /* Game UI Theme Variables */
+    :root {
+        --game-primary: #0088cc;
+        --game-secondary: #273746;
+        --game-accent: #ff9900;
+        --game-dark: #1a2430;
+        --game-light: #ecf0f1;
+        --game-success: #28a745;
+        --game-danger: #dc3545;
+        --game-warning: #ffc107;
+        --game-info: #17a2b8;
+        --card-radius: 12px;
+        --btn-radius: 8px;
+        --anim-speed: 0.3s;
+    }
+    
+    /* Advanced Grid Layout for Multi-Device */
     .game-container {
-        max-width: 500px;
-        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-gap: 20px;
         width: 100%;
+        margin: 0 auto;
+        max-width: 1200px;
     }
     
-    .telegram-style {
-        border-radius: 10px;
-        padding: 15px;
-        background-color: #273746;
+    @media (min-width: 992px) {
+        .game-container {
+            grid-template-columns: 320px 1fr;
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .game-container {
+            grid-template-columns: 320px 1fr 300px;
+        }
+    }
+    
+    /* Game Card Components */
+    .game-card {
+        border-radius: var(--card-radius);
+        padding: 20px;
+        background-color: var(--game-secondary);
         margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        transition: all var(--anim-speed);
+        position: relative;
+        overflow: hidden;
     }
     
-    @media (min-width: 768px) {
-        .telegram-style {
-            padding: 20px;
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    }
+    
+    .game-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--game-primary), var(--game-accent));
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .card-header h5 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header i {
+        margin-right: 8px;
+        color: var(--game-accent);
+    }
+    
+    /* Player Profile and Stats */
+    .profile-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .profile-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--game-primary), var(--game-info));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        margin-right: 15px;
+    }
+    
+    .profile-info {
+        flex: 1;
+    }
+    
+    .profile-username {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .profile-tokens {
+        font-size: 1.5rem;
+        color: var(--game-accent);
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        transition: all 0.5s;
+    }
+    
+    .profile-tokens i {
+        margin-right: 8px;
+    }
+    
+    .token-amount.pulse {
+        animation: pulse-token 1s ease-in-out;
+    }
+    
+    @keyframes pulse-token {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); color: var(--game-success); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Resources with Enhanced Visuals */
+    .resource-wrapper {
+        margin-bottom: 15px;
+    }
+    
+    .resource-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+    
+    .resource-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .resource-icon.energy {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: var(--game-warning);
+    }
+    
+    .resource-icon.pixels {
+        background-color: rgba(23, 162, 184, 0.2);
+        color: var(--game-info);
+    }
+    
+    .resource-icon.xp {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: var(--game-success);
+    }
+    
+    .resource-bar {
+        height: 10px;
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 15px;
+    }
+    
+    .resource-bar .progress-bar {
+        transition: width 1s ease-in-out;
+        position: relative;
+    }
+    
+    .resource-bar .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, 
+                                   rgba(255,255,255,0) 0%, 
+                                   rgba(255,255,255,0.1) 50%, 
+                                   rgba(255,255,255,0) 100%);
+        animation: shine 2s infinite linear;
+        background-size: 200% 100%;
+    }
+    
+    @keyframes shine {
+        to {
+            background-position: 200% 0;
+        }
+    }
+    
+    /* Gamified Action Buttons with 3D Effect */
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    @media (min-width: 576px) {
+        .actions-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .actions-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
     
     .game-action-btn {
-        border-radius: 8px;
-        margin-bottom: 10px;
-        padding: 10px;
-        font-weight: 500;
-        transition: all 0.2s;
+        border-radius: var(--btn-radius);
+        padding: 15px 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
         font-size: 0.9rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         height: 100%;
+        border: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+        transform: translateY(0);
     }
     
-    @media (min-width: 576px) {
-        .game-action-btn {
-            padding: 12px;
-            font-size: 1rem;
-        }
+    .game-action-btn i {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
     }
     
     .game-action-btn:hover {
         transform: translateY(-2px);
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-action-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(-100%) rotate(45deg);
+        transition: transform 0.6s;
+    }
+    
+    .game-action-btn:hover::before {
+        transform: translateX(100%) rotate(45deg);
+    }
+    
+    .game-action-btn.disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: translateY(0);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Enhanced Game Results Box */
+    .result-box {
+        border-radius: var(--card-radius);
+        padding: 15px;
+        margin: 20px 0;
+        display: none;
+        opacity: 1;
+        transition: opacity 0.5s;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+    
+    .result-box.success {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(40, 167, 69, 0.1));
+        border: 1px solid var(--game-success);
+        color: var(--game-success);
+    }
+    
+    .result-box.error {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(220, 53, 69, 0.1));
+        border: 1px solid var(--game-danger);
+        color: var(--game-danger);
+    }
+    
+    /* Animated Transaction Items */
+    .transactions-container {
+        max-height: 300px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+    
+    .transaction-item {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background-color: rgba(255, 255, 255, 0.05);
+        transition: transform 0.3s, background-color 0.3s;
+        position: relative;
+        overflow: hidden;
+        border-left: 4px solid transparent;
+    }
+    
+    .transaction-item:hover {
+        transform: translateX(5px);
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+    
+    .transaction-item.income {
+        border-left-color: var(--game-success);
+    }
+    
+    .transaction-item.expense {
+        border-left-color: var(--game-danger);
+    }
+    
+    /* Transaction Animation for New Items */
+    @keyframes slidein {
+        from { transform: translateX(-100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .transaction-item.new {
+        animation: slidein 0.5s forwards;
+    }
+    
+    /* Stats Display */
+    .stats-container {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -4px;
+    }
+    
+    .stat-badge {
+        margin: 4px;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s;
+    }
+    
+    .stat-badge:hover {
+        transform: translateY(-2px);
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .stat-badge i {
+        margin-right: 6px;
+    }
+    
+    /* Login Container Enhancement */
+    .login-container {
+        width: 100%;
+        max-width: 450px;
+        margin: 40px auto;
+        border-radius: var(--card-radius);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        background-color: var(--game-secondary);
+    }
+    
+    /* Responsive Adaptations */
+    @media (max-width: 576px) {
+        .game-card {
+            padding: 15px;
+        }
+        
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+        }
+        
+        .game-action-btn {
+            padding: 10px;
+        }
+        
+        .game-action-btn i {
+            font-size: 1.2rem;
+        }
+    }
+    
+    /* Legacy Classes for Compatibility */
+    .telegram-style {
+        border-radius: var(--card-radius);
+        padding: 20px;
+        background-color: var(--game-secondary);
+        margin-bottom: 20px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     }
     
     .tg-header {
@@ -55,79 +433,33 @@
         padding-bottom: 15px;
     }
     
-    .resource-bar {
-        height: 8px;
-        margin-top: 5px;
-        margin-bottom: 15px;
-        border-radius: 4px;
-    }
-    
-    .login-container {
-        width: 100%;
-        max-width: 350px;
-        margin: 20px auto;
-        padding: 15px;
-    }
-    
-    @media (min-width: 576px) {
-        .login-container {
-            margin: 40px auto;
-            padding: 20px;
-        }
-    }
-    
-    .stat-badge {
-        font-size: 0.8rem;
-        padding: 4px 8px;
-        margin-right: 6px;
-        margin-bottom: 6px;
-        display: inline-block;
-    }
-    
-    @media (min-width: 576px) {
-        .stat-badge {
-            font-size: 0.9rem;
-            padding: 5px 10px;
-            margin-right: 8px;
-            margin-bottom: 8px;
-        }
-    }
-    
-    .result-box {
+    /* Telegram Login Styling */
+    #telegram-login-pixel_plaza_bot {
+        position: relative;
+        transition: all 0.3s ease;
+        z-index: 1;
+        opacity: 1;
+        box-shadow: 0 4px 15px rgba(0, 136, 204, 0.2);
         border-radius: 8px;
-        padding: 15px;
-        margin-top: 20px;
-        display: none;
     }
     
-    .transaction-item {
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        background-color: rgba(255, 255, 255, 0.05);
-        word-break: break-word;
+    #telegram-login-pixel_plaza_bot:hover {
+        transform: scale(1.05) translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 136, 204, 0.3);
     }
     
-    /* Responsive text sizes */
-    @media (max-width: 576px) {
-        h4, h5 {
-            font-size: 1.1rem;
-        }
-        
-        p, div {
-            font-size: 0.9rem;
-        }
-        
-        .small {
-            font-size: 0.8rem;
-        }
+    /* Wallet Modal Improvements */
+    .modal-content {
+        background-color: var(--game-secondary);
+        border-radius: var(--card-radius);
     }
     
-    /* Improve modal responsiveness */
-    .modal-dialog {
-        margin: 10px;
-        width: calc(100% - 20px);
-        max-width: 500px;
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 </style>
 {% endblock %}
@@ -207,164 +539,211 @@
 {% else %}
 
 <div class="game-container">
-    <!-- User Info Header -->
-    <div class="telegram-style mb-4">
-        <div class="tg-header d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="mb-1">{{ user.username }}</h4>
-                <span class="badge bg-info">Level {{ game_state.level }}</span>
+    <!-- Player Profile Card -->
+    <div class="game-card">
+        <div class="profile-section">
+            <div class="profile-avatar">
+                {{ user.username[0] }}
             </div>
-            <div class="text-end">
-                <h5 class="text-warning mb-1">{{ game_state.token_balance|round(2) }} $PXPT</h5>
+            <div class="profile-info">
+                <div class="profile-username">{{ user.username }}</div>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-info me-2">Level {{ game_state.level }}</span>
+                    {% if user.wallet_address %}
+                    <span class="badge bg-secondary" title="{{ user.wallet_address }}">
+                        <i class="fas fa-wallet"></i>
+                    </span>
+                    {% endif %}
+                </div>
             </div>
         </div>
         
-        <!-- Resources Section -->
-        <div class="resources mb-4">
-            <div class="row g-2">
-                <div class="col-6">
+        <div class="profile-tokens">
+            <i class="fas fa-coins"></i>
+            <span class="token-amount" id="token-display">{{ game_state.token_balance|round(2) }}</span> $PXPT
+        </div>
+        
+        <!-- Resources with Enhanced Visuals -->
+        <div class="mt-4">
+            <div class="resource-wrapper">
+                <div class="resource-header">
                     <div>
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-bolt text-warning me-1"></i> Energy</span>
-                            <span>{{ game_state.energy }}/100</span>
-                        </div>
-                        <div class="progress resource-bar">
-                            <div class="progress-bar bg-warning" role="progressbar" 
-                                 style="width: {{ (game_state.energy / 100) * 100 }}%">
-                            </div>
-                        </div>
+                        <span class="resource-icon energy">
+                            <i class="fas fa-bolt"></i>
+                        </span>
+                        <span>Energy</span>
                     </div>
+                    <span>{{ game_state.energy }}/100</span>
                 </div>
-                <div class="col-6">
-                    <div>
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-paint-brush text-info me-1"></i> Pixels</span>
-                            <span>{{ game_state.pixels }}</span>
-                        </div>
-                        <div class="progress resource-bar">
-                            <div class="progress-bar bg-info" role="progressbar" 
-                                 style="width: {% if game_state.pixels > 100 %}100{% else %}{{ (game_state.pixels / 100 * 100) }}{% endif %}%">
-                            </div>
-                        </div>
-                    </div>
+                <div class="resource-bar">
+                    <div class="progress-bar bg-warning" role="progressbar" 
+                         style="width: {{ (game_state.energy / 100) * 100 }}%"></div>
                 </div>
             </div>
             
-            <div class="mt-3">
-                <div class="d-flex justify-content-between">
-                    <span><i class="fas fa-star text-primary me-1"></i> Experience</span>
+            <div class="resource-wrapper">
+                <div class="resource-header">
+                    <div>
+                        <span class="resource-icon pixels">
+                            <i class="fas fa-paint-brush"></i>
+                        </span>
+                        <span>Pixels</span>
+                    </div>
+                    <span>{{ game_state.pixels }}</span>
+                </div>
+                <div class="resource-bar">
+                    <div class="progress-bar bg-info" role="progressbar" 
+                         style="width: {% if game_state.pixels > 100 %}100{% else %}{{ (game_state.pixels / 100 * 100) }}{% endif %}%"></div>
+                </div>
+            </div>
+            
+            <div class="resource-wrapper">
+                <div class="resource-header">
+                    <div>
+                        <span class="resource-icon xp">
+                            <i class="fas fa-star"></i>
+                        </span>
+                        <span>Experience</span>
+                    </div>
                     <span>{{ game_state.experience }}/{{ game_state.level * 100 }}</span>
                 </div>
-                <div class="progress resource-bar">
-                    <div class="progress-bar bg-primary" role="progressbar" 
-                         style="width: {{ (game_state.experience / (game_state.level * 100)) * 100 }}%">
-                    </div>
+                <div class="resource-bar">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ (game_state.experience / (game_state.level * 100)) * 100 }}%"></div>
                 </div>
             </div>
         </div>
         
-        <!-- Stats Section -->
-        <div class="mb-4">
-            <h6>Your Stats:</h6>
-            <div>
-                <span class="badge bg-secondary stat-badge">
-                    <i class="fas fa-building me-1"></i> {{ game_state.buildings_owned }} Buildings
-                </span>
-                <span class="badge bg-secondary stat-badge">
-                    <i class="fas fa-palette me-1"></i> {{ game_state.pixel_art_created }} Artworks
-                </span>
-                <span class="badge bg-secondary stat-badge">
-                    <i class="fas fa-fire me-1"></i> {{ game_state.daily_streak }} Day Streak
-                </span>
+        <!-- Stats with Hover Effects -->
+        <div class="mt-4">
+            <h6 class="mb-2">Your Achievements</h6>
+            <div class="stats-container">
+                <div class="stat-badge">
+                    <i class="fas fa-building"></i> {{ game_state.buildings_owned }} Buildings
+                </div>
+                <div class="stat-badge">
+                    <i class="fas fa-palette"></i> {{ game_state.pixel_art_created }} Artworks
+                </div>
+                <div class="stat-badge">
+                    <i class="fas fa-fire"></i> {{ game_state.daily_streak }} Day Streak
+                </div>
+                <div class="stat-badge">
+                    <i class="fas fa-users"></i> {{ game_state.referral_count }} Referrals
+                </div>
+                <div class="stat-badge">
+                    <i class="fas fa-tasks"></i> {{ game_state.tasks_completed }} Tasks
+                </div>
             </div>
         </div>
         
-        <!-- Game Actions -->
-        <div id="action-result" class="result-box"></div>
-        
-        <div class="actions">
-            <div class="row g-2">
-                <div class="col-6 col-sm-4">
-                    <button class="btn btn-primary w-100 game-action-btn game-action" data-action="daily">
-                        <i class="fas fa-calendar-day d-block mb-1"></i>
-                        <span class="d-none d-sm-inline">Daily Claim</span>
-                        <span class="d-inline d-sm-none">Daily</span>
-                    </button>
-                </div>
-                <div class="col-6 col-sm-4">
-                    <button class="btn btn-warning w-100 game-action-btn game-action" data-action="mine">
-                        <i class="fas fa-hammer d-block mb-1"></i>
-                        <span class="d-none d-sm-inline">Mine Pixels</span>
-                        <span class="d-inline d-sm-none">Mine</span>
-                    </button>
-                </div>
-                <div class="col-6 col-sm-4">
-                    <button class="btn btn-danger w-100 game-action-btn game-action" data-action="create">
-                        <i class="fas fa-palette d-block mb-1"></i>
-                        <span class="d-none d-sm-inline">Create Art</span>
-                        <span class="d-inline d-sm-none">Create</span>
-                    </button>
-                </div>
-                <div class="col-6 col-sm-4">
-                    <button class="btn btn-success w-100 game-action-btn game-action" data-action="build">
-                        <i class="fas fa-building d-block mb-1"></i>
-                        <span>Build</span>
-                    </button>
-                </div>
-                <div class="col-6 col-sm-4">
-                    <button class="btn btn-info w-100 game-action-btn game-action" data-action="collect">
-                        <i class="fas fa-piggy-bank d-block mb-1"></i>
-                        <span class="d-none d-sm-inline">Collect Income</span>
-                        <span class="d-inline d-sm-none">Collect</span>
-                    </button>
-                </div>
-                <div class="col-6 col-sm-4">
-                    <button class="btn btn-outline-light w-100 game-action-btn" id="wallet-btn">
-                        <i class="fas fa-wallet d-block mb-1"></i>
-                        <span class="d-none d-sm-inline">Set Wallet</span>
-                        <span class="d-inline d-sm-none">Wallet</span>
-                    </button>
-                </div>
-            </div>
+        <!-- Quick Links -->
+        <div class="mt-4 d-flex justify-content-between">
+            <a href="{{ url_for('tasks') }}?id={{ user.telegram_id }}" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-tasks me-1"></i> Tasks
+            </a>
+            <a href="{{ url_for('referrals') }}?id={{ user.telegram_id }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-user-friends me-1"></i> Referrals
+            </a>
+            <a href="{{ url_for('leaderboard') }}" class="btn btn-sm btn-outline-warning">
+                <i class="fas fa-trophy me-1"></i> Leaderboard
+            </a>
         </div>
     </div>
     
-    <!-- Recent Transactions -->
-    <div class="telegram-style">
-        <h5 class="mb-3"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+    <!-- Game Actions Panel -->
+    <div class="game-card">
+        <div class="card-header">
+            <h5><i class="fas fa-gamepad"></i> Game Actions</h5>
+        </div>
         
-        <div id="transactions-container">
+        <!-- Result Display Box -->
+        <div id="action-result" class="result-box mb-4"></div>
+        
+        <!-- Game Actions Grid -->
+        <div class="actions-grid">
+            <button class="btn btn-primary game-action-btn game-action" data-action="daily">
+                <i class="fas fa-calendar-day"></i>
+                <span>Daily Claim</span>
+            </button>
+            <button class="btn btn-warning game-action-btn game-action" data-action="mine">
+                <i class="fas fa-hammer"></i>
+                <span>Mine Pixels</span>
+            </button>
+            <button class="btn btn-danger game-action-btn game-action" data-action="create">
+                <i class="fas fa-palette"></i>
+                <span>Create Art</span>
+            </button>
+            <button class="btn btn-success game-action-btn game-action" data-action="build">
+                <i class="fas fa-building"></i>
+                <span>Build</span>
+            </button>
+            <button class="btn btn-info game-action-btn game-action" data-action="collect">
+                <i class="fas fa-piggy-bank"></i>
+                <span>Collect</span>
+            </button>
+            <button class="btn btn-secondary game-action-btn" id="wallet-btn">
+                <i class="fas fa-wallet"></i>
+                <span>Wallet</span>
+            </button>
+        </div>
+        
+        <!-- Game Instructions -->
+        <div class="mt-4 p-3 rounded bg-dark">
+            <h6 class="text-info mb-2"><i class="fas fa-info-circle me-2"></i>How to Play</h6>
+            <ul class="mb-0 ps-3 small">
+                <li class="mb-1">Claim your daily reward to maintain your streak</li>
+                <li class="mb-1">Mine to gather pixels for creating art</li>
+                <li class="mb-1">Create pixel art to earn $PXPT tokens</li>
+                <li class="mb-1">Build structures for passive income</li>
+                <li class="mb-1">Complete tasks and invite friends for bonus rewards</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Activity Log Panel -->
+    <div class="game-card">
+        <div class="card-header">
+            <h5><i class="fas fa-history"></i> Activity Log</h5>
+            <span class="badge bg-primary">{{ transactions|length if transactions else 0 }} Events</span>
+        </div>
+        
+        <div class="transactions-container" id="transactions-container">
             {% if transactions %}
                 {% for tx in transactions %}
-                <div class="transaction-item">
-                    <div class="d-flex flex-column flex-sm-row justify-content-between">
-                        <div class="mb-2 mb-sm-0">
+                <div class="transaction-item {{ 'income' if tx.amount > 0 else 'expense' }}">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
                             {% if tx.type == 'daily_reward' %}
-                                <span class="badge bg-primary me-1">Daily</span>
+                                <span class="badge bg-primary">Daily</span>
                             {% elif tx.type == 'mining' %}
-                                <span class="badge bg-warning me-1">Mining</span>
+                                <span class="badge bg-warning">Mining</span>
                             {% elif tx.type == 'pixel_art' %}
-                                <span class="badge bg-danger me-1">Pixel Art</span>
+                                <span class="badge bg-danger">Pixel Art</span>
                             {% elif tx.type == 'building_income' %}
-                                <span class="badge bg-success me-1">Income</span>
+                                <span class="badge bg-success">Income</span>
                             {% elif tx.type == 'building_purchase' %}
-                                <span class="badge bg-info me-1">Purchase</span>
+                                <span class="badge bg-info">Purchase</span>
                             {% else %}
-                                <span class="badge bg-secondary me-1">{{ tx.type }}</span>
+                                <span class="badge bg-secondary">{{ tx.type }}</span>
                             {% endif %}
-                            <span class="small d-inline-block text-truncate" style="max-width: 180px;">{{ tx.description }}</span>
                         </div>
                         <div class="{{ 'text-success' if tx.amount > 0 else 'text-danger' }} fw-bold">
                             {{ tx.amount|round(2) }} $PXPT
                         </div>
                     </div>
-                    <div class="text-muted small mt-1">
-                        {{ tx.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>{{ tx.description }}</span>
+                        <span>{{ tx.timestamp.strftime('%m-%d %H:%M') }}</span>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <p class="text-center text-muted">No transactions yet. Start playing!</p>
+                <div class="text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-compass fa-3x text-muted"></i>
+                    </div>
+                    <p class="text-muted mb-0">No activity yet. Start your adventure!</p>
+                </div>
             {% endif %}
         </div>
     </div>
