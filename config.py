@@ -156,14 +156,91 @@ MINING_REWARD_MIN = 1
 MINING_REWARD_MAX = 3
 MINING_ENERGY_COST = 10
 MINING_PIXEL_GAIN = 20
+MINING_MATERIAL_CHANCE = 0.3  # 30% chance to find materials while mining
+MINING_MATERIAL_MIN = 1
+MINING_MATERIAL_MAX = 5
+MINING_GEM_CHANCE = 0.05  # 5% chance to find gems while mining
+MINING_GEM_MIN = 1
+MINING_GEM_MAX = 2
+
 ART_TOKEN_REWARD_MIN = 3
 ART_TOKEN_REWARD_MAX = 10
 ART_ENERGY_COST = 20
 ART_PIXEL_COST = 50
+ART_GEM_CHANCE = 0.1  # 10% chance to find gems while creating art
+ART_GEM_MIN = 1
+ART_GEM_MAX = 3
+
+# Building types and their properties
+BUILDING_TYPES = {
+    'mine': {
+        'name': 'Pixel Mine',
+        'description': 'Produces pixels over time',
+        'base_cost': 10,
+        'produces': 'pixels',
+        'production_rate': 10,  # Pixels per collection
+        'material_cost': 0,
+        'level_multiplier': 1.5  # Production increases by this factor per level
+    },
+    'studio': {
+        'name': 'Art Studio',
+        'description': 'Creates pixel art and generates tokens',
+        'base_cost': 25,
+        'produces': 'tokens',
+        'production_rate': 2,  # Tokens per collection
+        'material_cost': 10,
+        'level_multiplier': 1.3
+    },
+    'factory': {
+        'name': 'Material Factory',
+        'description': 'Produces building materials',
+        'base_cost': 50,
+        'produces': 'materials',
+        'production_rate': 5,  # Materials per collection
+        'material_cost': 20,
+        'level_multiplier': 1.4
+    },
+    'market': {
+        'name': 'Pixel Marketplace',
+        'description': 'Reduces market fees and increases trading profits',
+        'base_cost': 75,
+        'produces': 'tokens',
+        'production_rate': 5,  # Tokens per collection
+        'material_cost': 30,
+        'level_multiplier': 1.2
+    },
+    'bank': {
+        'name': 'Token Bank',
+        'description': 'Generates interest on your token balance',
+        'base_cost': 100,
+        'produces': 'tokens',
+        'production_rate': 0.01,  # % of balance per collection
+        'material_cost': 50,
+        'level_multiplier': 1.2
+    }
+}
+
 BUILDING_COST_BASE = 10
 BUILDING_COST_MULTIPLIER = 1.5
 BUILDING_INCOME_BASE = 1
 COLLECTION_COOLDOWN_HOURS = 4
+BUILDING_UPGRADE_MULTIPLIER = 2.0  # Cost multiplier for each level upgrade
+
+# Market economy
+MARKET_FEE_PERCENTAGE = 5  # 5% fee on market transactions
+MARKET_ORDER_EXPIRY_DAYS = 7  # Orders expire after 7 days
+MARKET_MIN_TOKEN_BALANCE = 1.0  # Minimum token balance required to place orders
+MARKET_MAX_ACTIVE_ORDERS = 5  # Maximum active orders per user
+MARKET_PRICE_FLUCTUATION = 0.1  # 10% max random price fluctuation daily
+
+# Skill progression
+SKILL_UP_THRESHOLD = 100  # Actions needed to level up a skill
+SKILL_LEVEL_BONUS = 0.1  # 10% bonus per skill level
+
+# Event system
+EVENT_CHANCE_DAILY = 0.2  # 20% chance of a random event each day
+EVENT_DURATION_DAYS_MIN = 1
+EVENT_DURATION_DAYS_MAX = 7
 
 # Progression
 XP_PER_LEVEL = 100  # Experience points needed per level

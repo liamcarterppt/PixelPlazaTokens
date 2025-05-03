@@ -1357,10 +1357,17 @@ function setupWalletManagement(telegramId) {
                 const resultEl = document.getElementById('action-result');
                 showActionResult(resultEl, 'Wallet address updated successfully!', true);
                 
-                // Auto-refresh after animation completes
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
+                // Update user wallet display without reloading
+                // If there's a display element for the wallet, update it
+                const walletDisplayElement = document.getElementById('wallet-display');
+                if (walletDisplayElement) {
+                    walletDisplayElement.textContent = walletAddress;
+                }
+                
+                // Add wallet address to any elements that need to display it
+                document.querySelectorAll('.wallet-address-display').forEach(el => {
+                    el.textContent = walletAddress;
+                });
             } else {
                 // Show error in modal
                 saveWalletBtn.disabled = false;

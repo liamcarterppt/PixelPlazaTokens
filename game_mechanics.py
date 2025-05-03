@@ -1,13 +1,22 @@
 import random
 import logging
+import math
 from datetime import datetime, timedelta
-from models import User, GameState, Transaction
+from models import User, GameState, Transaction, Building, MarketOrder, MarketHistory, GameEvent
 from app import db
 from config import (
     DAILY_REWARD, DAILY_STREAK_BONUS, 
     MINING_REWARD_MIN, MINING_REWARD_MAX, MINING_ENERGY_COST, MINING_PIXEL_GAIN,
+    MINING_MATERIAL_CHANCE, MINING_MATERIAL_MIN, MINING_MATERIAL_MAX,
+    MINING_GEM_CHANCE, MINING_GEM_MIN, MINING_GEM_MAX,
     ART_TOKEN_REWARD_MIN, ART_TOKEN_REWARD_MAX, ART_ENERGY_COST, ART_PIXEL_COST,
-    BUILDING_COST_BASE, BUILDING_COST_MULTIPLIER, BUILDING_INCOME_BASE, COLLECTION_COOLDOWN_HOURS,
+    ART_GEM_CHANCE, ART_GEM_MIN, ART_GEM_MAX,
+    BUILDING_TYPES, BUILDING_COST_BASE, BUILDING_COST_MULTIPLIER, 
+    BUILDING_INCOME_BASE, COLLECTION_COOLDOWN_HOURS, BUILDING_UPGRADE_MULTIPLIER,
+    MARKET_FEE_PERCENTAGE, MARKET_ORDER_EXPIRY_DAYS, MARKET_MIN_TOKEN_BALANCE,
+    MARKET_MAX_ACTIVE_ORDERS, MARKET_PRICE_FLUCTUATION,
+    SKILL_UP_THRESHOLD, SKILL_LEVEL_BONUS,
+    EVENT_CHANCE_DAILY, EVENT_DURATION_DAYS_MIN, EVENT_DURATION_DAYS_MAX,
     XP_PER_LEVEL
 )
 
@@ -114,7 +123,7 @@ class GameMechanics:
         }
     
     def _process_mining(self, user, game_state):
-        """Process mining action."""
+        """Process mining action with enhanced mechanics."""
         # Check if user has enough energy
         if game_state.energy < MINING_ENERGY_COST:
             return {
@@ -123,16 +132,47 @@ class GameMechanics:
                 "game_state": self._get_game_state_dict(game_state)
             }
         
-        # Calculate mining reward with some randomness
+        # Get active events that affect mining
+        active_events = self._get_active_events(affecting_activity='mining')
+        mining_multiplier = 1.0
+        for event in active_events:
+            mining_multiplier *= event.mining_multiplier
+        
+        # Apply skill level bonus
+        skill_bonus = 1.0 + (game_state.mining_skill * SKILL_LEVEL_BONUS)
+        
+        # Calculate mining reward with enhanced mechanics
         base_reward = MINING_REWARD_MIN + (game_state.level * 0.2)  # Increase reward with level
         max_reward = MINING_REWARD_MAX + (game_state.level * 0.2)
-        reward = round(random.uniform(base_reward, max_reward), 2)
+        reward = round(random.uniform(base_reward, max_reward) * skill_bonus * mining_multiplier, 2)
+        
+        # Calculate pixel gain with skill bonus
+        pixel_gain = round(MINING_PIXEL_GAIN * skill_bonus * mining_multiplier)
+        
+        # Chance to find materials based on events and skill
+        material_found = 0
+        if random.random() < MINING_MATERIAL_CHANCE * skill_bonus * mining_multiplier:
+            material_found = random.randint(MINING_MATERIAL_MIN, MINING_MATERIAL_MAX)
+            game_state.materials += material_found
+        
+        # Chance to find gems based on events and skill (rare resource)
+        gems_found = 0
+        if random.random() < MINING_GEM_CHANCE * skill_bonus * mining_multiplier:
+            gems_found = random.randint(MINING_GEM_MIN, MINING_GEM_MAX)
+            game_state.gems += gems_found
         
         # Update game state
         game_state.token_balance += reward
         game_state.energy -= MINING_ENERGY_COST
-        game_state.pixels += MINING_PIXEL_GAIN
-        game_state.experience += 5
+        game_state.pixels += pixel_gain
+        
+        # Always add experience
+        xp_gained = 5 + round(2 * mining_multiplier)  # Bonus XP during events
+        game_state.experience += xp_gained
+        
+        # Progress mining skill
+        mining_skill_progress = random.randint(1, 3)
+        new_skill_level = self._progress_skill(game_state, 'mining', mining_skill_progress)
         
         # Check for level up
         level_up = False
@@ -142,29 +182,54 @@ class GameMechanics:
             level_up = True
         
         # Record transaction
+        reward_description = 'Mining reward'
+        if mining_multiplier > 1.0:
+            reward_description += f' (Event bonus: {mining_multiplier:.1f}x)'
+        
         mining_transaction = Transaction(
             user_id=user.id,
             type='mining',
             amount=reward,
-            description=f'Mining reward'
+            description=reward_description
         )
         db.session.add(mining_transaction)
         
+        # Check if we should trigger a random event
+        self._maybe_trigger_random_event(user, game_state)
+        
         db.session.commit()
+        
+        # Build response message
+        message = f"Mining successful! +{reward} $PXPT, +{pixel_gain} Pixels"
+        if material_found > 0:
+            message += f", +{material_found} Materials"
+        if gems_found > 0:
+            message += f", +{gems_found} Gems"
+        if new_skill_level:
+            message += f" | Mining skill increased to level {game_state.mining_skill}!"
+        
+        # Optional event notification
+        event_message = self._get_active_event_message(active_events)
+        if event_message:
+            message += f" | {event_message}"
         
         return {
             "success": True,
-            "message": f"Mining successful! +{reward} $PXPT, +{MINING_PIXEL_GAIN} Pixels",
+            "message": message,
             "reward": reward,
-            "pixels_found": MINING_PIXEL_GAIN,
+            "pixels_found": pixel_gain,
+            "materials_found": material_found,
+            "gems_found": gems_found,
             "energy_used": MINING_ENERGY_COST,
-            "xp_gained": 5,
+            "xp_gained": xp_gained,
             "level_up": level_up,
-            "game_state": self._get_game_state_dict(game_state)
+            "skill_up": new_skill_level,
+            "game_state": self._get_game_state_dict(game_state),
+            "active_events": [{"name": e.name, "multiplier": e.mining_multiplier} for e in active_events] if active_events else []
         }
     
     def _process_pixel_art(self, user, game_state):
-        """Process pixel art creation action."""
+        """Process pixel art creation action with enhanced mechanics."""
         # Check if user has enough pixels and energy
         if game_state.pixels < ART_PIXEL_COST:
             return {
@@ -180,17 +245,44 @@ class GameMechanics:
                 "game_state": self._get_game_state_dict(game_state)
             }
         
-        # Calculate reward with some randomness
+        # Get active events that affect art creation
+        active_events = self._get_active_events(affecting_activity='art')
+        art_multiplier = 1.0
+        for event in active_events:
+            art_multiplier *= event.art_multiplier
+            
+        # Apply skill level bonus
+        skill_bonus = 1.0 + (game_state.art_skill * SKILL_LEVEL_BONUS)
+        
+        # Calculate reward with enhanced mechanics
         base_reward = ART_TOKEN_REWARD_MIN + (game_state.level * 0.5)
         max_reward = ART_TOKEN_REWARD_MAX + (game_state.level * 0.5)
-        reward = round(random.uniform(base_reward, max_reward), 2)
+        # Higher quality art will fetch better prices
+        quality_factor = random.uniform(0.8, 1.2)  # Random quality of the art
+        reward = round(random.uniform(base_reward, max_reward) * skill_bonus * art_multiplier * quality_factor, 2)
+        
+        # Chance to find gems based on events and skill (special resource from art)
+        gems_found = 0
+        if random.random() < ART_GEM_CHANCE * skill_bonus * art_multiplier:
+            gems_found = random.randint(ART_GEM_MIN, ART_GEM_MAX)
+            game_state.gems += gems_found
+        
+        # Calculate pixel cost reduction based on skill (more efficient art creation)
+        actual_pixel_cost = max(10, ART_PIXEL_COST - math.floor(game_state.art_skill / 2) * 5)
         
         # Update game state
         game_state.token_balance += reward
-        game_state.pixels -= ART_PIXEL_COST
+        game_state.pixels -= actual_pixel_cost
         game_state.energy -= ART_ENERGY_COST
         game_state.pixel_art_created += 1
-        game_state.experience += 10
+        
+        # Always add experience with potential event bonus
+        xp_gained = 10 + round(3 * art_multiplier)
+        game_state.experience += xp_gained
+        
+        # Progress art skill
+        art_skill_progress = random.randint(2, 4) # Art creation is better for skill progression
+        new_skill_level = self._progress_skill(game_state, 'art', art_skill_progress)
         
         # Check for level up
         level_up = False
@@ -199,26 +291,60 @@ class GameMechanics:
             game_state.level += 1
             level_up = True
         
-        # Record transaction
+        # Record transaction with quality info
+        quality_desc = "Standard"
+        if quality_factor > 1.1:
+            quality_desc = "Masterpiece"
+        elif quality_factor > 1.0:
+            quality_desc = "High quality"
+        elif quality_factor < 0.9:
+            quality_desc = "Basic"
+            
+        reward_description = f'Pixel art creation reward ({quality_desc})'
+        if art_multiplier > 1.0:
+            reward_description += f' (Event bonus: {art_multiplier:.1f}x)'
+            
         creation_transaction = Transaction(
             user_id=user.id,
             type='pixel_art',
             amount=reward,
-            description=f'Pixel art creation reward'
+            description=reward_description
         )
         db.session.add(creation_transaction)
         
+        # Check if we should trigger a random event
+        self._maybe_trigger_random_event(user, game_state)
+        
         db.session.commit()
+        
+        # Build response message
+        message = f"Pixel art created! +{reward} $PXPT ({quality_desc})"
+        if gems_found > 0:
+            message += f", +{gems_found} Gems"
+        if actual_pixel_cost < ART_PIXEL_COST:
+            message += f" | Efficiency bonus: {ART_PIXEL_COST - actual_pixel_cost} pixels saved!"
+        if new_skill_level:
+            message += f" | Art skill increased to level {game_state.art_skill}!"
+            
+        # Optional event notification
+        event_message = self._get_active_event_message(active_events)
+        if event_message:
+            message += f" | {event_message}"
         
         return {
             "success": True,
-            "message": f"Pixel art created! +{reward} $PXPT",
+            "message": message,
             "reward": reward,
-            "pixels_used": ART_PIXEL_COST,
+            "pixels_used": actual_pixel_cost,
             "energy_used": ART_ENERGY_COST,
-            "xp_gained": 10,
+            "gems_found": gems_found,
+            "quality_factor": quality_factor,
+            "quality_desc": quality_desc,
+            "xp_gained": xp_gained,
             "level_up": level_up,
-            "game_state": self._get_game_state_dict(game_state)
+            "skill_up": new_skill_level,
+            "game_state": self._get_game_state_dict(game_state),
+            "active_events": [{"name": e.name, "multiplier": e.art_multiplier} for e in active_events] if active_events else []
         }
     
     def _process_building(self, user, game_state):
