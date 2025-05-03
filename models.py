@@ -210,3 +210,29 @@ class GameEvent(db.Model):
     
     def __repr__(self):
         return f'<GameEvent {self.name} ({self.event_type})>'
+
+
+class MiniGameResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Game information
+    game_type = db.Column(db.String(50), nullable=False)  # 'pixel_match', 'token_puzzle', etc.
+    score = db.Column(db.Float, default=0.0)
+    game_data = db.Column(db.Text, nullable=True)  # JSON string with game-specific data
+    
+    # Rewards
+    reward_tokens = db.Column(db.Float, default=0.0)
+    reward_pixels = db.Column(db.Integer, default=0)
+    reward_materials = db.Column(db.Integer, default=0)
+    reward_gems = db.Column(db.Integer, default=0)
+    reward_xp = db.Column(db.Integer, default=0)
+    
+    # Timestamps
+    played_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('mini_game_results', lazy=True))
+    
+    def __repr__(self):
+        return f'<MiniGameResult {self.game_type} score={self.score}>'

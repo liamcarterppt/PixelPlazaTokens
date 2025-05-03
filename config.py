@@ -250,6 +250,50 @@ import os
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_USERNAME = os.environ.get("TELEGRAM_BOT_USERNAME", "")
 
+# Mini-Games System
+MINI_GAME_COOLDOWN_HOURS = 12  # Hours before a player can play the same mini-game again
+MINI_GAME_TOKEN_REWARDS = {
+    'pixel_match': 5,
+    'token_puzzle': 7,
+    'resource_rush': 6,
+    'gem_hunter': 8,
+    'pattern_predictor': 10
+}
+MINI_GAME_RESOURCE_REWARDS = {
+    'pixel_match': {
+        'pixels': 50,
+        'materials': 10,
+        'gems': 1
+    },
+    'token_puzzle': {
+        'pixels': 30,
+        'materials': 20,
+        'gems': 2
+    },
+    'resource_rush': {
+        'pixels': 100,
+        'materials': 25,
+        'gems': 1
+    },
+    'gem_hunter': {
+        'pixels': 30,
+        'materials': 15,
+        'gems': 5
+    },
+    'pattern_predictor': {
+        'pixels': 40,
+        'materials': 20,
+        'gems': 3
+    }
+}
+MINI_GAME_XP_REWARDS = {
+    'pixel_match': 20,
+    'token_puzzle': 25,
+    'resource_rush': 20,
+    'gem_hunter': 30,
+    'pattern_predictor': 35
+}
+
 # Token Economy
 MAX_SUPPLY = 1000000  # Maximum token supply
 AIRDROP_ALLOCATION = 100000  # Tokens allocated for airdrop
