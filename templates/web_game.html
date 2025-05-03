@@ -381,6 +381,60 @@
 
 {% block extra_js %}
 <script>
+// Telegram Login Widget authentication handler
+function onTelegramAuth(user) {
+    // Add referral code if present
+    const referralCode = document.getElementById('referral-code').value.trim();
+    
+    // Create form data for submission
+    const formData = new FormData();
+    for (const key in user) {
+        formData.append(key, user[key]);
+    }
+    
+    if (referralCode) {
+        formData.append('referral_code', referralCode);
+    }
+    
+    // Show loading state
+    const errorDiv = document.getElementById('registration-error');
+    if (errorDiv) {
+        errorDiv.textContent = 'Authenticating...';
+        errorDiv.className = 'alert alert-info mb-3';
+        errorDiv.style.display = 'block';
+    }
+    
+    // Submit to our server for verification
+    fetch('/telegram-login', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect to game with authenticated telegram_id
+            window.location.href = `/web-game?id=${data.telegram_id}`;
+        } else {
+            // Show error
+            if (typeof showError === 'function') {
+                showError(data.message || 'Authentication failed');
+            } else if (errorDiv) {
+                errorDiv.textContent = data.message || 'Authentication failed';
+                errorDiv.className = 'alert alert-danger mb-3';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (typeof showError === 'function') {
+            showError('Authentication failed. Please try again.');
+        } else if (errorDiv) {
+            errorDiv.textContent = 'Authentication failed. Please try again.';
+            errorDiv.className = 'alert alert-danger mb-3';
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Add resize handler for responsive layout
     window.addEventListener('resize', function() {
@@ -521,58 +575,49 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     {% else %}
-    // Registration form submission
-    document.getElementById('registration-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value.trim();
-        const referralCode = document.getElementById('referral-code').value.trim();
-        const errorElement = document.getElementById('registration-error');
-        
-        if (!username) {
-            errorElement.textContent = 'Username is required';
-            errorElement.classList.remove('d-none');
-            return;
-        }
-        
-        // Disable form
-        document.querySelector('#registration-form button').disabled = true;
-        document.querySelector('#registration-form button').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating account...';
-        
-        // Prepare request body
-        let requestBody = `username=${encodeURIComponent(username)}`;
-        if (referralCode) {
-            requestBody += `&referral_code=${encodeURIComponent(referralCode)}`;
-        }
-        
-        // Send to server
-        fetch('/api/web_register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: requestBody
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Redirect to game with the new telegram_id
-                window.location.href = `/web-game?id=${data.telegram_id}`;
+    // Add Telegram Login Widget script
+    const telegramLoginContainer = document.getElementById('telegram-login-pixel_plaza_bot');
+    if (telegramLoginContainer) {
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = "https://telegram.org/js/telegram-widget.js?22";
+        script.setAttribute('data-telegram-login', "{{ telegram_bot_username }}");
+        script.setAttribute('data-size', "large");
+        script.setAttribute('data-radius', "4");
+        script.setAttribute('data-userpic', "true");
+        script.setAttribute('data-onauth', "onTelegramAuth(user)");
+        script.setAttribute('data-request-access', "write");
+        telegramLoginContainer.appendChild(script);
+    }
+    
+    // Referral code handling
+    const referralCodeInput = document.getElementById('referral-code');
+    if (referralCodeInput) {
+        // Store referral code in session storage when changed
+        referralCodeInput.addEventListener('change', function() {
+            if (this.value.trim()) {
+                sessionStorage.setItem('referral_code', this.value.trim());
             } else {
-                errorElement.textContent = data.message;
-                errorElement.classList.remove('d-none');
-                document.querySelector('#registration-form button').disabled = false;
-                document.querySelector('#registration-form button').textContent = 'Start Playing';
+                sessionStorage.removeItem('referral_code');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            errorElement.textContent = 'An error occurred during registration. Please try again.';
-            errorElement.classList.remove('d-none');
-            document.querySelector('#registration-form button').disabled = false;
-            document.querySelector('#registration-form button').textContent = 'Start Playing';
         });
-    });
+        
+        // Restore from session storage if available
+        const savedCode = sessionStorage.getItem('referral_code');
+        if (savedCode) {
+            referralCodeInput.value = savedCode;
+        }
+    }
+    
+    // Display error message function
+    const errorElement = document.getElementById('registration-error');
+    function showError(message) {
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.className = 'alert alert-danger mb-3';
+            errorElement.style.display = 'block';
+        }
+    }
     {% endif %}
 });
 
