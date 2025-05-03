@@ -106,7 +106,7 @@ class MiniGames:
         
         if last_game:
             time_since_played = now - last_game.played_at
-            cooldown_seconds = MINI_GAME_COOLDOWN_HOURS * 3600
+            cooldown_seconds = config.MINI_GAME_COOLDOWN_HOURS * 3600
             
             if time_since_played.total_seconds() < cooldown_seconds:
                 cooldown_remaining = cooldown_seconds - time_since_played.total_seconds()
@@ -201,17 +201,17 @@ class MiniGames:
     
     def _calculate_rewards(self, game_type, score, difficulty=1.0):
         """Calculate rewards based on game type, score and difficulty."""
-        base_rewards = MINI_GAME_RESOURCE_REWARDS.get(game_type, {})
+        base_rewards = config.MINI_GAME_RESOURCE_REWARDS.get(game_type, {})
         
         # Apply score multiplier (0-1 range)
         score_factor = min(1.0, max(0.1, score / 100))
         
         # Calculate rewards
-        reward_tokens = round(MINI_GAME_TOKEN_REWARDS.get(game_type, 5) * score_factor * difficulty, 2)
+        reward_tokens = round(config.MINI_GAME_TOKEN_REWARDS.get(game_type, 5) * score_factor * difficulty, 2)
         reward_pixels = round(base_rewards.get('pixels', 0) * score_factor * difficulty)
         reward_materials = round(base_rewards.get('materials', 0) * score_factor * difficulty)
         reward_gems = round(base_rewards.get('gems', 0) * score_factor * difficulty)
-        reward_xp = round(MINI_GAME_XP_REWARDS.get(game_type, 10) * score_factor * difficulty)
+        reward_xp = round(config.MINI_GAME_XP_REWARDS.get(game_type, 10) * score_factor * difficulty)
         
         return {
             'reward_tokens': reward_tokens,

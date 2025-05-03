@@ -48,6 +48,7 @@ with app.app_context():
 
 # Import game mechanics and utilities after models
 from game_mechanics import GameMechanics
+from mini_games import MiniGames
 from utils import (
     generate_referral_code, process_referral, initialize_tasks, 
     assign_tasks_to_user, update_task_progress, get_user_tasks
@@ -59,6 +60,9 @@ DEV_MODE = True
 
 # Initialize game mechanics
 game = GameMechanics()
+
+# Initialize mini-games
+mini_games = MiniGames()
 
 # Initialize tasks
 with app.app_context():
