@@ -1,20 +1,55 @@
 /**
  * Game Updates Module
  * Provides functions to update the game UI without refreshing the page
+ * Enhanced with better async handling and visual feedback
  */
+
+// Track pending operations to avoid multiple simultaneous requests
+let pendingGameAction = false;
+let lastActionTime = 0;
+const ACTION_COOLDOWN = 800; // ms
 
 // Function to update UI elements with new game state (no page reload needed)
 function updateGameStateUI(gameState, transactions, tasks) {
     console.log('Updating game state UI with:', gameState);
     
-    // Update token display
+    // Provide visual indication of update
+    const gameContainer = document.querySelector('.game-container');
+    if (gameContainer) {
+        gameContainer.classList.add('action-success');
+        setTimeout(() => {
+            gameContainer.classList.remove('action-success');
+        }, 2000);
+    }
+    
+    // Update token display with animation
     const tokenDisplay = document.getElementById('token-display');
     if (tokenDisplay) {
-        tokenDisplay.textContent = gameState.token_balance.toFixed(2);
-        tokenDisplay.classList.add('pulse');
-        setTimeout(() => {
-            tokenDisplay.classList.remove('pulse');
-        }, 1000);
+        // Save old value for animation
+        const oldValue = parseFloat(tokenDisplay.textContent);
+        const newValue = gameState.token_balance;
+        
+        // Animate the change
+        if (oldValue !== newValue) {
+            // Add appropriate class based on value change
+            if (newValue > oldValue) {
+                tokenDisplay.classList.add('text-success');
+                tokenDisplay.classList.add('pulse');
+            } else if (newValue < oldValue) {
+                tokenDisplay.classList.add('text-danger');
+                tokenDisplay.classList.add('pulse');
+            }
+            
+            // Update the text and remove classes after animation
+            tokenDisplay.textContent = newValue.toFixed(2);
+            setTimeout(() => {
+                tokenDisplay.classList.remove('pulse');
+                tokenDisplay.classList.remove('text-success');
+                tokenDisplay.classList.remove('text-danger');
+            }, 1500);
+        } else {
+            tokenDisplay.textContent = newValue.toFixed(2);
+        }
     }
     
     // Update resource bars
@@ -156,3 +191,196 @@ function formatTimestamp(timestamp) {
         minute: '2-digit'
     });
 }
+
+// Enhanced game action handler with cooldown and better error handling
+function performGameAction(action, params = {}) {
+    // Check if another action is pending or if we're in cooldown
+    const now = Date.now();
+    if (pendingGameAction) {
+        showMessage('Please wait until the current action completes', 'warning');
+        return Promise.reject('Action already in progress');
+    }
+    
+    if (now - lastActionTime < ACTION_COOLDOWN) {
+        showMessage('Please slow down your actions', 'warning');
+        return Promise.reject('Action cooldown in effect');
+    }
+    
+    // Set action as pending and update last action time
+    pendingGameAction = true;
+    lastActionTime = now;
+    
+    // Show loading spinner for the action
+    const actionButton = document.querySelector(`[data-action="${action}"]`);
+    let originalButtonContent = '';
+    if (actionButton) {
+        originalButtonContent = actionButton.innerHTML;
+        actionButton.innerHTML = '<span class="loading-indicator me-2"></span> Processing...';
+        actionButton.disabled = true;
+    }
+    
+    // Get the CSRF token if present (for POST requests)
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    // Prepare the request options
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken || ''
+        },
+        body: JSON.stringify({
+            action: action,
+            ...params
+        })
+    };
+    
+    // Send the request to the game action endpoint
+    return fetch('/api/game-action', requestOptions)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Reset pending action status
+            pendingGameAction = false;
+            
+            if (data.success) {
+                // Update the game state UI
+                updateGameStateUI(data.game_state, data.transactions, data.tasks);
+                
+                // Show success message if present
+                if (data.message) {
+                    showMessage(data.message, 'success');
+                }
+                
+                // Show any event messages
+                if (data.event_message) {
+                    showEventMessage(data.event_message);
+                }
+                
+                // Return the processed data
+                return data;
+            } else {
+                // Show error message
+                showMessage(data.message || 'Action failed', 'danger');
+                throw new Error(data.message || 'Action failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error performing game action:', error);
+            showMessage('An error occurred. Please try again.', 'danger');
+            throw error;
+        })
+        .finally(() => {
+            // Reset button state
+            if (actionButton) {
+                actionButton.innerHTML = originalButtonContent;
+                actionButton.disabled = false;
+            }
+            
+            // Release the pending action after a small delay (to prevent spam clicking)
+            setTimeout(() => {
+                pendingGameAction = false;
+            }, ACTION_COOLDOWN / 2);
+        });
+}
+
+// Helper function to show messages to the user
+function showMessage(message, type = 'info') {
+    // Look for existing message container or create one
+    let messageContainer = document.getElementById('game-message-container');
+    if (!messageContainer) {
+        messageContainer = document.createElement('div');
+        messageContainer.id = 'game-message-container';
+        messageContainer.className = 'position-fixed top-0 end-0 p-3';
+        messageContainer.style.zIndex = '1050';
+        document.body.appendChild(messageContainer);
+    }
+    
+    // Create the alert element
+    const alertId = `game-alert-${Date.now()}`;
+    const alert = document.createElement('div');
+    alert.id = alertId;
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.role = 'alert';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Add to container
+    messageContainer.appendChild(alert);
+    
+    // Auto-dismiss after 4 seconds
+    setTimeout(() => {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+            alertElement.classList.remove('show');
+            setTimeout(() => alertElement.remove(), 150);
+        }
+    }, 4000);
+}
+
+// Helper function to show event messages in a more prominent way
+function showEventMessage(message) {
+    // Create or find event message modal
+    let modal = document.getElementById('event-message-modal');
+    if (!modal) {
+        const modalHtml = `
+            <div class="modal fade" id="event-message-modal" tabindex="-1" aria-labelledby="eventMessageModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title" id="eventMessageModalLabel">Special Event!</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="event-message-content"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer.firstChild);
+        modal = document.getElementById('event-message-modal');
+    }
+    
+    // Set the message content
+    const contentElement = document.getElementById('event-message-content');
+    if (contentElement) {
+        contentElement.innerHTML = message;
+    }
+    
+    // Show the modal
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+// Document ready function to add event listeners for game actions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to all game action buttons
+    const actionButtons = document.querySelectorAll('[data-action]');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            const action = this.getAttribute('data-action');
+            const params = this.dataset.params ? JSON.parse(this.dataset.params) : {};
+            
+            performGameAction(action, params)
+                .catch(error => console.error('Error in game action:', error));
+        });
+    });
+    
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+});
