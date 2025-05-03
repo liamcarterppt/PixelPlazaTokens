@@ -243,29 +243,29 @@
         </button>
         <ul class="dropdown-menu w-100" aria-labelledby="adminTabMobile">
             <li>
-                <a class="dropdown-item active" href="#dashboard" data-bs-toggle="tab" role="tab" aria-controls="dashboard" aria-selected="true">
+                <button class="dropdown-item active" id="dashboard-tab-mobile" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
                     <i class="fas fa-chart-line me-2"></i>Dashboard
-                </a>
+                </button>
             </li>
             <li>
-                <a class="dropdown-item" href="#users" data-bs-toggle="tab" role="tab" aria-controls="users" aria-selected="false">
+                <button class="dropdown-item" id="users-tab-mobile" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">
                     <i class="fas fa-users me-2"></i>User Management
-                </a>
+                </button>
             </li>
             <li>
-                <a class="dropdown-item" href="#economy" data-bs-toggle="tab" role="tab" aria-controls="economy" aria-selected="false">
+                <button class="dropdown-item" id="economy-tab-mobile" data-bs-toggle="tab" data-bs-target="#economy" type="button" role="tab" aria-controls="economy" aria-selected="false">
                     <i class="fas fa-coins me-2"></i>Economy Control
-                </a>
+                </button>
             </li>
             <li>
-                <a class="dropdown-item" href="#content" data-bs-toggle="tab" role="tab" aria-controls="content" aria-selected="false">
+                <button class="dropdown-item" id="content-tab-mobile" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="false">
                     <i class="fas fa-edit me-2"></i>Content Management
-                </a>
+                </button>
             </li>
             <li>
-                <a class="dropdown-item" href="#airdrop" data-bs-toggle="tab" role="tab" aria-controls="airdrop" aria-selected="false">
+                <button class="dropdown-item" id="airdrop-tab-mobile" data-bs-toggle="tab" data-bs-target="#airdrop" type="button" role="tab" aria-controls="airdrop" aria-selected="false">
                     <i class="fas fa-parachute-box me-2"></i>Airdrop Planning
-                </a>
+                </button>
             </li>
         </ul>
     </div>
@@ -1962,6 +1962,46 @@ if (selectAllUsers && userTable) {
             checkbox.checked = selectAllUsers.checked;
         });
     });
+}
+
+// Tab switching functionality for content management section
+document.addEventListener('DOMContentLoaded', function() {
+    // Content management tab navigation
+    const contentNavItems = document.querySelectorAll('.content-nav .list-group-item');
+    if (contentNavItems.length > 0) {
+        contentNavItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                contentNavItems.forEach(navItem => {
+                    navItem.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    }
+    
+    // Add tab activation listeners for mobile nav
+    const mobileNavItems = document.querySelectorAll('[id$="-tab-mobile"]');
+    if (mobileNavItems.length > 0) {
+        mobileNavItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Set corresponding desktop tab active state
+                const targetId = this.getAttribute('data-bs-target');
+                const desktopTab = document.querySelector(`[data-bs-target="${targetId}"]:not([id$="-mobile"])`);
+                if (desktopTab) {
+                    const tabTrigger = new bootstrap.Tab(desktopTab);
+                    tabTrigger.show();
+                }
+                
+                // Remove active class from all mobile items
+                mobileNavItems.forEach(navItem => {
+                    navItem.classList.remove('active');
+                });
+                
+                // Add active class to clicked item
+                this.classList.add('active');
+            });
+        });
+    }
 }
 
 // Airdrop Countdown Timer

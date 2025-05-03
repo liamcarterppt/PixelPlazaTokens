@@ -464,37 +464,75 @@ def admin():
     if not session.get('admin'):
         return render_template('admin.html', authenticated=False)
     
-    # Get all users with their game states
-    users = db.session.query(
-        User, GameState
-    ).join(
-        GameState, User.id == GameState.user_id
-    ).order_by(
-        GameState.token_balance.desc()
-    ).all()
-    
-    # Calculate stats for the admin dashboard
-    from datetime import datetime, timedelta
-    
-    # User stats
-    total_users = len(users)
-    users_with_wallet = sum(1 for user, _ in users if user.wallet_address)
-    
-    # Game economy stats
-    total_tokens = sum(gs.token_balance for _, gs in users) if users else 0
-    total_pixels = sum(gs.pixels for _, gs in users) if users else 0
-    total_energy = sum(gs.energy for _, gs in users) if users else 0
-    total_materials = sum(gs.materials for _, gs in users) if users else 0
-    total_gems = sum(gs.gems for _, gs in users) if users else 0
-    total_buildings = sum(gs.buildings_owned for _, gs in users) if users else 0
-    total_art_created = sum(gs.pixel_art_created for _, gs in users) if users else 0
-    
-    # Active users counts
-    today = datetime.utcnow().date()
+    # Initialize default values in case of database issues
+    users = []
+    total_users = 0
+    users_with_wallet = 0
+    total_tokens = 0
+    total_pixels = 0
+    total_energy = 0
+    total_materials = 0
+    total_gems = 0
+    total_buildings = 0
+    total_art_created = 0
     active_today = 0
-    for _, gs in users:
-        if gs.last_active and gs.last_active.date() == today:
-            active_today += 1
+    users_level_5 = 0
+    users_with_buildings = 0
+    users_with_pixel_art = 0
+    eligible_users = 0
+    active_tasks = 8  # Default value for content management stats
+    announcements = 3
+    active_events = 1
+    help_articles = 5
+    
+    try:
+        # Get all users with their game states
+        db.session.execute("SELECT 1")  # Test connection query
+        
+        users = db.session.query(
+            User, GameState
+        ).join(
+            GameState, User.id == GameState.user_id
+        ).order_by(
+            GameState.token_balance.desc()
+        ).all()
+        
+        # Calculate stats for the admin dashboard
+        from datetime import datetime, timedelta
+        
+        # User stats
+        total_users = len(users)
+        users_with_wallet = sum(1 for user, _ in users if user.wallet_address)
+        
+        # Game economy stats
+        total_tokens = sum(gs.token_balance for _, gs in users) if users else 0
+        total_pixels = sum(gs.pixels for _, gs in users) if users else 0
+        total_energy = sum(gs.energy for _, gs in users) if users else 0
+        total_materials = sum(gs.materials for _, gs in users) if users else 0
+        total_gems = sum(gs.gems for _, gs in users) if users else 0
+        total_buildings = sum(gs.buildings_owned for _, gs in users) if users else 0
+        total_art_created = sum(gs.pixel_art_created for _, gs in users) if users else 0
+        
+        # Active users counts
+        today = datetime.utcnow().date()
+        active_today = 0
+        for _, gs in users:
+            if gs.last_active and gs.last_active.date() == today:
+                active_today += 1
+                
+        # Airdrop eligibility stats
+        users_level_5 = sum(1 for _, gs in users if gs.level >= 5)
+        users_with_buildings = sum(1 for _, gs in users if gs.buildings_owned > 0)
+        users_with_pixel_art = sum(1 for _, gs in users if gs.pixel_art_created > 0)
+        eligible_users = sum(1 for user, gs in users 
+                             if gs.level >= 5 
+                             and gs.buildings_owned > 0 
+                             and gs.pixel_art_created > 0 
+                             and user.wallet_address)
+    except Exception as e:
+        # Log the error but continue rendering the template with default values
+        print(f"Database error in admin panel: {e}")
+        flash("There was an issue connecting to the database. Some statistics may not be available.", "warning")
     
     return render_template(
         'admin.html', 
@@ -509,7 +547,16 @@ def admin():
         total_materials=total_materials,
         total_gems=total_gems,
         total_buildings=total_buildings,
-        total_art_created=total_art_created
+        total_art_created=total_art_created,
+        users_level_5=users_level_5,
+        users_with_buildings=users_with_buildings,
+        users_with_pixel_art=users_with_pixel_art,
+        eligible_users=eligible_users,
+        active_tasks=active_tasks,
+        announcements=announcements,
+        active_events=active_events,
+        help_articles=help_articles,
+        telegram_bot_username=os.environ.get('TELEGRAM_BOT_USERNAME', 'PixelPlazaTokenBot')
     )
 
 @app.route('/export_csv')
