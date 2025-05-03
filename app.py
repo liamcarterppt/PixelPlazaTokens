@@ -54,6 +54,9 @@ from utils import (
 )
 from config import REFERRER_LEVEL_REQUIREMENT, TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME
 
+# Development mode flag - set to True to bypass Telegram login requirement
+DEV_MODE = True
+
 # Initialize game mechanics
 game = GameMechanics()
 
@@ -258,10 +261,92 @@ def web_game():
                     )
         
         # For users who aren't logged in yet
+        if DEV_MODE:
+            # In dev mode, redirect to dev access point
+            return redirect(url_for('dev_game_access'))
+            
         logging.debug("Rendering web_game login page")
         return render_template('web_game.html', login_required=True, telegram_bot_username=TELEGRAM_BOT_USERNAME)
     except Exception as e:
         logging.error(f"Error in web_game route: {str(e)}")
+        logging.error(traceback.format_exc())
+        return render_template('error.html', error_message=str(e))
+
+@app.route('/dev-game')
+def dev_game_access():
+    """Developer access to game without Telegram login (only available in dev mode)"""
+    if not DEV_MODE:
+        flash('Developer mode is disabled', 'danger')
+        return redirect(url_for('index'))
+    
+    try:
+        # Look for a test user or create one if it doesn't exist
+        dev_user = User.query.filter_by(telegram_id='dev_user').first()
+        
+        if not dev_user:
+            # Create a dev user
+            dev_user = User(
+                username="Developer",
+                telegram_id="dev_user",
+                referral_code="DEV123"
+            )
+            db.session.add(dev_user)
+            db.session.flush()
+            
+            # Create initial game state with boosted stats for testing
+            dev_game_state = GameState(
+                user_id=dev_user.id,
+                token_balance=1000,
+                pixels=1000,
+                energy=100,
+                level=5,
+                experience=450,
+                buildings_owned=3,
+                pixel_art_created=5,
+                daily_streak=3,
+                referral_count=2,
+                tasks_completed=5
+            )
+            db.session.add(dev_game_state)
+            
+            # Add some test transactions
+            transactions = [
+                Transaction(user_id=dev_user.id, type='welcome_bonus', amount=10, description='Welcome bonus'),
+                Transaction(user_id=dev_user.id, type='daily_reward', amount=5, description='Daily reward'),
+                Transaction(user_id=dev_user.id, type='building_income', amount=20, description='Building income'),
+                Transaction(user_id=dev_user.id, type='building_purchase', amount=-50, description='Purchased building'),
+                Transaction(user_id=dev_user.id, type='pixel_art', amount=15, description='Created pixel art')
+            ]
+            for tx in transactions:
+                db.session.add(tx)
+                
+            # Assign tasks
+            assign_tasks_to_user(dev_user.id)
+            
+            db.session.commit()
+            
+            # Update some task progress
+            update_task_progress(dev_user.id, 'login', 3)
+            update_task_progress(dev_user.id, 'mining', 5)
+            update_task_progress(dev_user.id, 'pixel_art', 5)
+            
+        game_state = GameState.query.filter_by(user_id=dev_user.id).first()
+        transactions = Transaction.query.filter_by(user_id=dev_user.id).order_by(Transaction.timestamp.desc()).limit(10).all()
+        user_tasks = get_user_tasks(dev_user.id)
+        
+        logging.debug(f"Rendering dev game access with user: {dev_user.username}")
+        return render_template(
+            'web_game.html', 
+            user=dev_user, 
+            game_state=game_state, 
+            transactions=transactions, 
+            tasks=user_tasks,
+            login_required=False,
+            telegram_bot_username=TELEGRAM_BOT_USERNAME,
+            dev_mode=True
+        )
+    except Exception as e:
+        logging.error(f"Error in dev_game_access route: {str(e)}")
         logging.error(traceback.format_exc())
         return render_template('error.html', error_message=str(e))
 
