@@ -116,8 +116,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/invite - Get your referral link\n"
         "/stats - View game statistics\n\n"
         
-        "*Web Dashboard:*\n"
-        "/dashboard - Access your web dashboard\n\n"
+        "*Web Access:*\n"
+        "/dashboard - Access your web dashboard\n"
+        "/webgame - Play the game in your browser\n\n"
         
         "Build your pixel empire and earn $PXPT tokens for the upcoming airdrop! 🚀"
     )
@@ -689,6 +690,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         ],
         [
             InlineKeyboardButton("🌐 Dashboard", callback_data="dashboard"),
+            InlineKeyboardButton("🎮 Web Game", callback_data="webgame")
+        ],
+        [
             InlineKeyboardButton("ℹ️ Help", callback_data="help")
         ]
     ]
@@ -719,6 +723,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "leaderboard": leaderboard_command,
         "invite": invite_command,
         "dashboard": dashboard_command,
+        "webgame": webgame_command,
         "help": help_command
     }
     
@@ -748,6 +753,7 @@ def main() -> None:
     application.add_handler(CommandHandler("invite", invite_command))
     application.add_handler(CommandHandler("stats", stats_command))
     application.add_handler(CommandHandler("dashboard", dashboard_command))
+    application.add_handler(CommandHandler("webgame", webgame_command)) 
     application.add_handler(CommandHandler("menu", show_main_menu))
     
     # Add callback query handler for inline buttons
