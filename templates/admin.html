@@ -236,38 +236,53 @@
         </li>
     </ul>
     
-    <!-- Mobile Navigation Dropdown -->
-    <div class="d-md-none dropdown mb-3">
-        <button class="btn btn-primary dropdown-toggle w-100" type="button" id="adminTabMobile" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-bars me-2"></i>Admin Menu
-        </button>
-        <ul class="dropdown-menu w-100" aria-labelledby="adminTabMobile">
-            <li>
-                <button class="dropdown-item active" id="dashboard-tab-mobile" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
-                    <i class="fas fa-chart-line me-2"></i>Dashboard
+    <!-- Mobile Navigation -->
+    <div class="d-md-none mb-3">
+        <!-- Quick Stats Bar for Mobile -->
+        <div class="mobile-stats-bar mb-3">
+            <div class="row g-2 text-center">
+                <div class="col-6">
+                    <div class="p-2 bg-dark rounded">
+                        <div class="small text-muted">Users</div>
+                        <div class="fw-bold">{{ total_users }}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 bg-dark rounded">
+                        <div class="small text-muted">Tokens</div>
+                        <div class="fw-bold">{{ total_tokens|round(1) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Improved Mobile Navigation with Icons -->
+        <nav class="mobile-nav">
+            <div class="btn-group d-flex" role="group">
+                <button class="btn btn-dark flex-fill active" id="dashboard-tab-mobile" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                    <i class="fas fa-chart-line d-block mb-1"></i>
+                    <span class="small">Dashboard</span>
                 </button>
-            </li>
-            <li>
-                <button class="dropdown-item" id="users-tab-mobile" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">
-                    <i class="fas fa-users me-2"></i>User Management
+                <button class="btn btn-dark flex-fill" id="users-tab-mobile" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                    <i class="fas fa-users d-block mb-1"></i>
+                    <span class="small">Users</span>
                 </button>
-            </li>
-            <li>
-                <button class="dropdown-item" id="economy-tab-mobile" data-bs-toggle="tab" data-bs-target="#economy" type="button" role="tab" aria-controls="economy" aria-selected="false">
-                    <i class="fas fa-coins me-2"></i>Economy Control
+                <button class="btn btn-dark flex-fill" id="content-tab-mobile" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab">
+                    <i class="fas fa-edit d-block mb-1"></i>
+                    <span class="small">Content</span>
                 </button>
-            </li>
-            <li>
-                <button class="dropdown-item" id="content-tab-mobile" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="false">
-                    <i class="fas fa-edit me-2"></i>Content Management
+            </div>
+            <div class="btn-group d-flex mt-2" role="group">
+                <button class="btn btn-dark flex-fill" id="economy-tab-mobile" data-bs-toggle="tab" data-bs-target="#economy" type="button" role="tab">
+                    <i class="fas fa-coins d-block mb-1"></i>
+                    <span class="small">Economy</span>
                 </button>
-            </li>
-            <li>
-                <button class="dropdown-item" id="airdrop-tab-mobile" data-bs-toggle="tab" data-bs-target="#airdrop" type="button" role="tab" aria-controls="airdrop" aria-selected="false">
-                    <i class="fas fa-parachute-box me-2"></i>Airdrop Planning
+                <button class="btn btn-dark flex-fill" id="airdrop-tab-mobile" data-bs-toggle="tab" data-bs-target="#airdrop" type="button" role="tab">
+                    <i class="fas fa-parachute-box d-block mb-1"></i>
+                    <span class="small">Airdrop</span>
                 </button>
-            </li>
-        </ul>
+            </div>
+        </nav>
     </div>
 </div>
 
@@ -501,7 +516,7 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="userTable">
+                    <table class="table table-hover mb-0 responsive-table" id="userTable">
                         <thead>
                             <tr>
                                 <th>
@@ -522,26 +537,26 @@
                         <tbody>
                             {% for user, game_state in users %}
                                 <tr>
-                                    <td>
+                                    <td data-label="Select">
                                         <div class="form-check">
                                             <input class="form-check-input user-select" type="checkbox" value="{{ user.id }}">
                                         </div>
                                     </td>
-                                    <td>{{ user.username }}</td>
-                                    <td>{{ user.telegram_id }}</td>
-                                    <td>
+                                    <td data-label="Username">{{ user.username }}</td>
+                                    <td data-label="Telegram ID">{{ user.telegram_id }}</td>
+                                    <td data-label="Wallet">
                                         {% if user.wallet_address %}
                                             <span class="text-success">{{ user.wallet_address[:6] }}...{{ user.wallet_address[-4:] }}</span>
                                         {% else %}
                                             <span class="text-danger">Not set</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ game_state.level }}</td>
-                                    <td>{{ game_state.token_balance|round(2) }}</td>
-                                    <td>{{ game_state.buildings_owned }}</td>
-                                    <td>{{ game_state.last_active.strftime('%Y-%m-%d %H:%M') if game_state.last_active else 'Never' }}</td>
-                                    <td>
-                                        <div class="btn-group">
+                                    <td data-label="Level">{{ game_state.level }}</td>
+                                    <td data-label="Tokens">{{ game_state.token_balance|round(2) }}</td>
+                                    <td data-label="Buildings">{{ game_state.buildings_owned }}</td>
+                                    <td data-label="Last Active">{{ game_state.last_active.strftime('%Y-%m-%d %H:%M') if game_state.last_active else 'Never' }}</td>
+                                    <td data-label="Actions">
+                                        <div class="table-actions">
                                             <button class="btn btn-sm btn-outline-info user-action-btn">
                                                 <i class="fas fa-eye"></i>
                                             </button>
@@ -1078,7 +1093,20 @@
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Content</label>
-                                                <textarea class="form-control" rows="3" placeholder="Announcement content"></textarea>
+                                                <div class="rich-editor-container">
+                                                    <div class="rich-editor-toolbar">
+                                                        <button type="button" title="Bold" data-command="bold"><i class="fas fa-bold"></i></button>
+                                                        <button type="button" title="Italic" data-command="italic"><i class="fas fa-italic"></i></button>
+                                                        <button type="button" title="Underline" data-command="underline"><i class="fas fa-underline"></i></button>
+                                                        <button type="button" title="Strikethrough" data-command="strikeThrough"><i class="fas fa-strikethrough"></i></button>
+                                                        <button type="button" title="Link" data-command="createLink"><i class="fas fa-link"></i></button>
+                                                        <button type="button" title="Unordered List" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+                                                        <button type="button" title="Ordered List" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
+                                                        <button type="button" title="Heading" data-command="heading"><i class="fas fa-heading"></i></button>
+                                                    </div>
+                                                    <div class="rich-editor-content" contenteditable="true" placeholder="Announcement content"></div>
+                                                    <input type="hidden" name="announcement_content" id="announcement_content_input">
+                                                </div>
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">

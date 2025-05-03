@@ -1,5 +1,144 @@
 /* Custom styling for Pixel Plaza Token Game - Enhanced with responsive design */
 
+/* Admin Panel Mobile Optimizations */
+.mobile-nav .btn {
+    font-size: 0.8rem;
+    padding: 10px 5px;
+}
+
+.mobile-stats-bar .bg-dark {
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Responsive Table for Mobile */
+@media (max-width: 767px) {
+    .responsive-table {
+        border: 0;
+    }
+    
+    .responsive-table thead {
+        display: none;
+    }
+    
+    .responsive-table tr {
+        margin-bottom: 20px;
+        display: block;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 12px;
+        background-color: #2a2d36;
+    }
+    
+    .responsive-table td {
+        display: block;
+        text-align: right;
+        font-size: 0.875rem;
+        padding: 8px;
+        position: relative;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .responsive-table td:last-child {
+        border-bottom: 0;
+    }
+    
+    .responsive-table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+    
+    .responsive-table td:nth-of-type(1) {
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+        margin-bottom: 8px;
+    }
+    
+    .table-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 8px;
+    }
+}
+
+/* Rich Text Editor Styles */
+.rich-editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+    background: #343a40;
+    border-radius: 4px 4px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rich-editor-toolbar button {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rich-editor-toolbar button:hover,
+.rich-editor-toolbar button.active {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.rich-editor-content {
+    min-height: 200px;
+    padding: 10px;
+    background: #2a2d36;
+    border-radius: 0 0 4px 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Real-time Analytics Dashboard */
+.analytics-card {
+    height: 100%; 
+    background: #2a2d36;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.analytics-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.chart-container {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+.icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.icon-circle i {
+    font-size: 24px;
+    color: white;
+}
+
 /* Global responsive adjustments */
 @media (max-width: 768px) {
     .container {
