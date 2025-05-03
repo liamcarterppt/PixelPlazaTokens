@@ -168,6 +168,11 @@ COLLECTION_COOLDOWN_HOURS = 4
 # Progression
 XP_PER_LEVEL = 100  # Experience points needed per level
 
+# Telegram Bot Configuration
+import os
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_USERNAME = os.environ.get("TELEGRAM_BOT_USERNAME", "")
+
 # Token Economy
 MAX_SUPPLY = 1000000  # Maximum token supply
 AIRDROP_ALLOCATION = 100000  # Tokens allocated for airdrop

@@ -2,6 +2,10 @@ import os
 import logging
 import random
 import string
+import hmac
+import hashlib
+import time
+import json
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
@@ -41,7 +45,7 @@ from utils import (
     generate_referral_code, process_referral, initialize_tasks, 
     assign_tasks_to_user, update_task_progress, get_user_tasks
 )
-from config import REFERRER_LEVEL_REQUIREMENT
+from config import REFERRER_LEVEL_REQUIREMENT, TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME
 
 # Initialize game mechanics
 game = GameMechanics()
@@ -83,6 +87,130 @@ def dashboard():
         transactions=transactions
     )
 
+# Telegram login validation helper function
+def verify_telegram_login(auth_data):
+    """
+    Verify Telegram login widget data
+    
+    Args:
+        auth_data (dict): Authentication data from Telegram login widget
+        
+    Returns:
+        bool: True if authentication is valid, False otherwise
+    """
+    if not TELEGRAM_BOT_TOKEN:
+        logging.warning("TELEGRAM_BOT_TOKEN not set, skipping authentication check")
+        return False
+        
+    required_fields = ['id', 'first_name', 'username', 'photo_url', 'auth_date', 'hash']
+    for field in required_fields:
+        if field not in auth_data and field != 'username' and field != 'photo_url':
+            return False
+    
+    # Get authentication data, which expires after 24 hours
+    auth_date = auth_data.get('auth_date')
+    if not auth_date:
+        return False
+    
+    # Check auth_date to prevent replay attacks (within 24 hours)
+    if int(time.time()) - int(auth_date) > 86400:
+        return False
+    
+    # Verify hash
+    received_hash = auth_data.pop('hash')
+    data_check_string = '\n'.join([f"{key}={value}" for key, value in sorted(auth_data.items())])
+    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode()).digest()
+    calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    
+    return calculated_hash == received_hash
+
+@app.route('/telegram-login', methods=['POST'])
+def telegram_login():
+    """Handle Telegram Login Widget authentication"""
+    auth_data = {}
+    for key, value in request.form.items():
+        auth_data[key] = value
+    
+    if not auth_data:
+        return jsonify({'success': False, 'message': 'No authentication data provided'})
+    
+    # Verify authentication data
+    if not verify_telegram_login(auth_data):
+        return jsonify({'success': False, 'message': 'Invalid authentication data'})
+    
+    # Get Telegram ID from auth data
+    telegram_id = auth_data.get('id')
+    
+    # Check if user already exists
+    user = User.query.filter_by(telegram_id=telegram_id).first()
+    
+    # If user doesn't exist, create a new user with Telegram data
+    if not user:
+        try:
+            # Use the Telegram username if available, or first_name otherwise
+            username = auth_data.get('username', auth_data.get('first_name'))
+            if not username:
+                return jsonify({'success': False, 'message': 'Username is required'})
+            
+            # Check for username conflicts
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                # Append a unique identifier if username is taken
+                username = f"{username}_{telegram_id[-5:]}"
+            
+            # Check referral code if provided
+            referral_code = request.form.get('referral_code')
+            referrer = None
+            if referral_code:
+                referrer = User.query.filter_by(referral_code=referral_code).first()
+            
+            # Create new user
+            new_user = User(
+                username=username,
+                telegram_id=telegram_id,
+                referred_by_id=referrer.id if referrer else None
+            )
+            db.session.add(new_user)
+            db.session.flush()  # Flush to get the ID without committing
+            
+            # Create initial game state
+            new_game_state = GameState(
+                user_id=new_user.id,
+                token_balance=10,  # Initial tokens
+            )
+            db.session.add(new_game_state)
+            
+            # Record initial transaction
+            welcome_transaction = Transaction(
+                user_id=new_user.id,
+                type='welcome_bonus',
+                amount=10,
+                description=f'Welcome bonus of 10 $PXPT'
+            )
+            db.session.add(welcome_transaction)
+            
+            # Assign tasks to the new user
+            assign_tasks_to_user(new_user.id)
+            
+            db.session.commit()
+            
+            # Process referral after successful user creation
+            if referrer:
+                process_referral(referrer.id, new_user)
+                
+            user = new_user
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error during Telegram login registration: {str(e)}")
+            return jsonify({'success': False, 'message': f'Registration failed: {str(e)}'})
+    
+    # Return success with user ID for redirection
+    return jsonify({
+        'success': True,
+        'message': 'Authentication successful',
+        'telegram_id': telegram_id
+    })
+
 @app.route('/web-game')
 def web_game():
     """Web-based game interface compatible with Telegram UI"""
@@ -119,7 +247,7 @@ def web_game():
                 )
     
     # For users who aren't logged in yet
-    return render_template('web_game.html', login_required=True)
+    return render_template('web_game.html', login_required=True, telegram_bot_username=TELEGRAM_BOT_USERNAME)
 
 @app.route('/tasks')
 def tasks():

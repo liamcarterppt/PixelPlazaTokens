@@ -161,29 +161,23 @@
 <div class="login-container telegram-style">
     <div class="px-2 px-sm-3 py-3 py-sm-4">
         <h3 class="text-center mb-3 mb-sm-4 fs-4 fs-sm-3">Join the Game</h3>
-        <p class="text-center">Create a username to start playing Pixel Plaza Token game!</p>
+        <p class="text-center">Log in with Telegram to start playing the Pixel Plaza Token game!</p>
         
         <div id="registration-error" class="alert alert-danger d-none mb-3"></div>
         
-        <form id="registration-form" class="mb-3">
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
-                <div class="form-text">Choose a unique username for the game</div>
-            </div>
+        <div class="text-center mb-4">
+            <div id="telegram-login-pixel_plaza_bot" class="mb-3" style="margin: 0 auto;"></div>
+            
             <div class="mb-3">
                 <label for="referral-code" class="form-label">Referral Code <span class="text-muted">(Optional)</span></label>
                 <input type="text" class="form-control" id="referral-code" placeholder="Enter referral code if you have one">
                 <div class="form-text">Get a bonus 3 $PXPT by using a friend's referral code</div>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-2">
-                <i class="fas fa-gamepad me-2"></i>Start Playing
-            </button>
-        </form>
+        </div>
         
-        <div class="text-center">
-            <p class="text-muted small mb-1">Or play with Telegram</p>
-            <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-sm btn-outline-info">
+        <div class="text-center mt-3">
+            <p class="text-muted small mb-1">Or play with Telegram Bot</p>
+            <a href="https://t.me/{{ telegram_bot_username }}" target="_blank" class="btn btn-sm btn-outline-info">
                 <i class="fab fa-telegram me-1"></i>Open Telegram Bot
             </a>
         </div>
