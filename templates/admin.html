@@ -1,16 +1,99 @@
 {% extends 'base.html' %}
 
-{% block title %}Admin{% endblock %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- Chart.js for analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Date range picker for filtering -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<style>
+/* Admin Dashboard Styling */
+.stat-card {
+    border-radius: 10px;
+    border: none;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 24px;
+}
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+.trend-up {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+.trend-down {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+.control-panel-card {
+    border: none;
+    border-radius: 10px;
+}
+.filter-bar {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+.admin-nav {
+    background: linear-gradient(to right, #8e44ad, #3498db);
+    padding: 10px;
+    margin: -20px -15px 20px;
+    border-radius: 0 0 15px 15px;
+    color: white;
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+.nav-pills .nav-link.active {
+    background-color: #8e44ad;
+}
+.resource-distribution {
+    height: 250px;
+}
+.user-action-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+.admin-tab-content {
+    padding: 20px 0;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <h1>Pixel Plaza Admin Panel</h1>
+<!-- Admin Navigation Bar -->
+<div class="admin-nav d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Pixel Plaza Admin</h2>
+        <p class="mb-0 text-white-50">Administrative Dashboard & Control Panel</p>
     </div>
-    <div class="col-md-4 d-flex justify-content-end align-items-center">
+    <div>
         {% if authenticated %}
-        <a href="{{ url_for('export_csv') }}" class="btn btn-success">
-            <i class="fas fa-file-csv me-2"></i>Export CSV
+        <a href="{{ url_for('export_csv') }}" class="btn btn-light">
+            <i class="fas fa-file-csv me-2"></i>Export Airdrop Data
         </a>
         {% endif %}
     </div>
@@ -36,76 +119,287 @@
     </div>
 </div>
 {% else %}
-<div class="row mt-4">
-    <div class="col-md-4 mb-4">
-        <div class="card border-0 h-100">
-            <div class="card-header bg-dark">
-                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Game Statistics</h5>
+<!-- Admin Tabs -->
+<ul class="nav nav-pills mb-4" id="adminTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+            <i class="fas fa-chart-line me-2"></i>Dashboard
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">
+            <i class="fas fa-users me-2"></i>User Management
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="economy-tab" data-bs-toggle="tab" data-bs-target="#economy" type="button" role="tab" aria-controls="economy" aria-selected="false">
+            <i class="fas fa-coins me-2"></i>Economy Control
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="airdrop-tab" data-bs-toggle="tab" data-bs-target="#airdrop" type="button" role="tab" aria-controls="airdrop" aria-selected="false">
+            <i class="fas fa-parachute-box me-2"></i>Airdrop Planning
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content admin-tab-content" id="adminTabContent">
+    <!-- Dashboard Tab -->
+    <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+        <!-- Key Metrics Row -->
+        <div class="row mb-4">
+            <!-- Total Users Metric -->
+            <div class="col-md-3 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="text-muted mb-1">Total Users</h6>
+                                <h3 class="mb-0">{{ users|length }}</h3>
+                            </div>
+                            <div class="stat-icon bg-primary">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="trend-indicator trend-up">
+                            <i class="fas fa-arrow-up me-1"></i> 12% this week
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-6">
-                        <div class="card bg-dark text-center p-3">
-                            <h6>Total Users</h6>
-                            <h3>{{ users|length }}</h3>
+            
+            <!-- Active Users Metric -->
+            <div class="col-md-3 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="text-muted mb-1">Active Today</h6>
+                                {% set active_today = users|selectattr('1.last_active', 'defined')|selectattr('1.last_active', 'ge', now().replace(hour=0, minute=0, second=0))|list|length %}
+                                <h3 class="mb-0">{{ active_today }}</h3>
+                            </div>
+                            <div class="stat-icon bg-success">
+                                <i class="fas fa-user-check"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="card bg-dark text-center p-3">
-                            <h6>With Wallet</h6>
-                            <h3>{{ users|selectattr('0.wallet_address', 'defined')|list|length }}</h3>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="card bg-dark text-center p-3">
-                            <h6>Buildings</h6>
-                            <h3>{{ users|sum(attribute='1.buildings_owned') }}</h3>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="card bg-dark text-center p-3">
-                            <h6>Pixel Art</h6>
-                            <h3>{{ users|sum(attribute='1.pixel_art_created') }}</h3>
+                        <div class="trend-indicator trend-up">
+                            <i class="fas fa-arrow-up me-1"></i> 8% vs yesterday
                         </div>
                     </div>
                 </div>
-                
-                <div class="mt-4">
-                    <h6>Total $PXPT in Circulation</h6>
-                    <h3 class="text-warning">{{ users|sum(attribute='1.token_balance')|round(2) }} $PXPT</h3>
+            </div>
+            
+            <!-- Token Economy Metric -->
+            <div class="col-md-3 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="text-muted mb-1">$PXPT Circulating</h6>
+                                <h3 class="mb-0">{{ users|sum(attribute='1.token_balance')|round(2) }}</h3>
+                            </div>
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                        </div>
+                        <div class="trend-indicator trend-up">
+                            <i class="fas fa-arrow-up me-1"></i> 5% this week
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="d-grid gap-2 mt-4">
-                    <a href="{{ url_for('export_csv') }}" class="btn btn-primary">
-                        <i class="fas fa-file-csv me-2"></i>Export Airdrop Data
-                    </a>
+            </div>
+            
+            <!-- Buildings Metric -->
+            <div class="col-md-3 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="text-muted mb-1">Total Buildings</h6>
+                                <h3 class="mb-0">{{ users|sum(attribute='1.buildings_owned') }}</h3>
+                            </div>
+                            <div class="stat-icon bg-info">
+                                <i class="fas fa-building"></i>
+                            </div>
+                        </div>
+                        <div class="trend-indicator trend-up">
+                            <i class="fas fa-arrow-up me-1"></i> 15% this week
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <!-- User Growth Chart -->
+            <div class="col-md-6 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>User Growth</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="userGrowthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Token Distribution Chart -->
+            <div class="col-md-6 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Token Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="tokenDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Activity & Resource Charts -->
+        <div class="row mb-4">
+            <!-- Activity Breakdown -->
+            <div class="col-md-6 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Activity Breakdown</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="activityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resource Heatmap -->
+            <div class="col-md-6 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-th me-2"></i>Resource Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="resource-distribution">
+                            <div class="row mb-3">
+                                <div class="col-3 text-center">
+                                    <div class="icon-circle" style="background-color: #3498db;">
+                                        <i class="fas fa-paint-brush"></i>
+                                    </div>
+                                    <p class="mt-2">Pixels</p>
+                                    <h5>{{ users|sum(attribute='1.pixels') }}</h5>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <div class="icon-circle" style="background-color: #2ecc71;">
+                                        <i class="fas fa-bolt"></i>
+                                    </div>
+                                    <p class="mt-2">Energy</p>
+                                    <h5>{{ users|sum(attribute='1.energy') }}</h5>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <div class="icon-circle" style="background-color: #f39c12;">
+                                        <i class="fas fa-hammer"></i>
+                                    </div>
+                                    <p class="mt-2">Materials</p>
+                                    <h5>{{ users|sum(attribute='1.materials') }}</h5>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <div class="icon-circle" style="background-color: #9b59b6;">
+                                        <i class="fas fa-gem"></i>
+                                    </div>
+                                    <p class="mt-2">Gems</p>
+                                    <h5>{{ users|sum(attribute='1.gems') }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="col-md-8 mb-4">
-        <div class="card border-0">
-            <div class="card-header bg-dark">
-                <h5 class="mb-0"><i class="fas fa-users me-2"></i>User List</h5>
+    <!-- Users Tab -->
+    <div class="tab-pane fade" id="users" role="tabpanel" aria-labelledby="users-tab">
+        <!-- User Filtering -->
+        <div class="filter-bar mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <input type="text" class="form-control" id="userSearch" placeholder="Search users...">
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <select class="form-select" id="filterActivity">
+                        <option value="all">All Activity</option>
+                        <option value="today">Active Today</option>
+                        <option value="week">Active This Week</option>
+                        <option value="inactive">Inactive (7+ days)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <select class="form-select" id="filterWallet">
+                        <option value="all">All Wallet Status</option>
+                        <option value="yes">Wallet Registered</option>
+                        <option value="no">No Wallet</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100" id="applyFilters">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Management Table -->
+        <div class="card bg-dark stat-card">
+            <div class="card-header bg-dark border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>User Management</h5>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-light" id="exportUserData">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog me-1"></i>Actions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Message All</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-gift me-2"></i>Reward All</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-ban me-2"></i>Reset Inactive</a></li>
+                    </ul>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="userTable">
                         <thead>
                             <tr>
+                                <th>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAllUsers">
+                                    </div>
+                                </th>
                                 <th>Username</th>
                                 <th>Telegram ID</th>
                                 <th>Wallet</th>
                                 <th>Level</th>
-                                <th>$PXPT Balance</th>
+                                <th>$PXPT</th>
                                 <th>Buildings</th>
                                 <th>Last Active</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for user, game_state in users %}
                                 <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input user-select" type="checkbox" value="{{ user.id }}">
+                                        </div>
+                                    </td>
                                     <td>{{ user.username }}</td>
                                     <td>{{ user.telegram_id }}</td>
                                     <td>
@@ -119,75 +413,875 @@
                                     <td>{{ game_state.token_balance|round(2) }}</td>
                                     <td>{{ game_state.buildings_owned }}</td>
                                     <td>{{ game_state.last_active.strftime('%Y-%m-%d %H:%M') if game_state.last_active else 'Never' }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-info user-action-btn">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning user-action-btn">
+                                                <i class="fas fa-gift"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger user-action-btn">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+            <div class="card-footer bg-dark border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted">Showing {{ users|length }} users</span>
+                    </div>
+                    <nav aria-label="User pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-<div class="row">
-    <div class="col-12 mb-4">
-        <div class="card border-0">
-            <div class="card-header bg-dark">
-                <h5 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Airdrop Eligibility</h5>
+    
+    <!-- Economy Control Tab -->
+    <div class="tab-pane fade" id="economy" role="tabpanel" aria-labelledby="economy-tab">
+        <div class="row mb-4">
+            <!-- Economy Control Panel -->
+            <div class="col-lg-6 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Economy Control Panel</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="economyControlForm">
+                            <div class="mb-4">
+                                <h6 class="text-primary mb-3">Resource Generation Rates</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mining Reward Multiplier</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="1.0" step="0.1" min="0.1" max="5.0">
+                                            <span class="input-group-text"><i class="fas fa-times"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Art Reward Multiplier</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="1.0" step="0.1" min="0.1" max="5.0">
+                                            <span class="input-group-text"><i class="fas fa-times"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Building Income Multiplier</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="1.0" step="0.1" min="0.1" max="5.0">
+                                            <span class="input-group-text"><i class="fas fa-times"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Energy Regeneration Rate</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="10" step="1" min="1" max="50">
+                                            <span class="input-group-text">per hour</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-warning mb-3">Building & Upgrade Costs</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mine Base Cost</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="50" step="5" min="10">
+                                            <span class="input-group-text">$PXPT</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Studio Base Cost</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="80" step="5" min="10">
+                                            <span class="input-group-text">$PXPT</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Upgrade Cost Multiplier</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="1.5" step="0.1" min="1.1">
+                                            <span class="input-group-text"><i class="fas fa-level-up-alt"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Material Cost per Level</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="20" step="5" min="5">
+                                            <span class="input-group-text">materials</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-info mb-0">Game Events</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-plus me-1"></i>Create New Event
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Event Name</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Mining Boom</td>
+                                                <td><span class="badge bg-success">Positive</span></td>
+                                                <td><span class="badge bg-warning">Scheduled</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-light">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Pixel Festival</td>
+                                                <td><span class="badge bg-success">Positive</span></td>
+                                                <td><span class="badge bg-success">Active</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-warning">End Early</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Resource Scarcity</td>
+                                                <td><span class="badge bg-danger">Negative</span></td>
+                                                <td><span class="badge bg-secondary">Inactive</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-light">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-success">Activate</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Economy Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <p>Below is a summary of users eligible for the airdrop based on the following criteria:</p>
-                <ul>
-                    <li>Has registered a wallet address</li>
-                    <li>Reached at least Level 5</li>
-                    <li>Owns at least 1 building</li>
-                    <li>Created at least 1 pixel art</li>
-                </ul>
-                
-                <div class="table-responsive mt-4">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Eligibility Factor</th>
-                                <th>Eligible Users</th>
-                                <th>Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Wallet Address</td>
-                                <td>{{ users|selectattr('0.wallet_address', 'defined')|list|length }}</td>
-                                <td>{{ ((users|selectattr('0.wallet_address', 'defined')|list|length / users|length) * 100)|round }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Level 5+</td>
-                                <td>{{ users|selectattr('1.level', 'ge', 5)|list|length }}</td>
-                                <td>{{ ((users|selectattr('1.level', 'ge', 5)|list|length / users|length) * 100)|round }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Own Buildings</td>
-                                <td>{{ users|selectattr('1.buildings_owned', 'ge', 1)|list|length }}</td>
-                                <td>{{ ((users|selectattr('1.buildings_owned', 'ge', 1)|list|length / users|length) * 100)|round }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Created Pixel Art</td>
-                                <td>{{ users|selectattr('1.pixel_art_created', 'ge', 1)|list|length }}</td>
-                                <td>{{ ((users|selectattr('1.pixel_art_created', 'ge', 1)|list|length / users|length) * 100)|round }}%</td>
-                            </tr>
-                            <tr class="table-primary">
-                                <td><strong>Fully Eligible</strong></td>
-                                <td>
-                                    {% set eligible_count = users|selectattr('0.wallet_address', 'defined')|selectattr('1.level', 'ge', 5)|selectattr('1.buildings_owned', 'ge', 1)|selectattr('1.pixel_art_created', 'ge', 1)|list|length %}
-                                    <strong>{{ eligible_count }}</strong>
-                                </td>
-                                <td><strong>{{ ((eligible_count / users|length) * 100)|round }}%</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
+            
+            <!-- Market Analytics -->
+            <div class="col-lg-6 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Market Analytics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container mb-4">
+                            <canvas id="marketPriceChart"></canvas>
+                        </div>
+                        
+                        <h6 class="text-warning mb-3">Resource Market Prices</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="card bg-dark p-3 border border-info border-opacity-25 rounded-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="fas fa-paint-brush text-info me-2"></i>Pixels</span>
+                                        <span class="trend-indicator trend-up"><i class="fas fa-arrow-up me-1"></i>3%</span>
+                                    </div>
+                                    <h5 class="mb-0">2.45 $PXPT</h5>
+                                    <small class="text-muted">per 100 units</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-dark p-3 border border-warning border-opacity-25 rounded-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="fas fa-hammer text-warning me-2"></i>Materials</span>
+                                        <span class="trend-indicator trend-down"><i class="fas fa-arrow-down me-1"></i>2%</span>
+                                    </div>
+                                    <h5 class="mb-0">5.80 $PXPT</h5>
+                                    <small class="text-muted">per 100 units</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-dark p-3 border border-purple border-opacity-25 rounded-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="fas fa-gem text-purple me-2"></i>Gems</span>
+                                        <span class="trend-indicator trend-up"><i class="fas fa-arrow-up me-1"></i>12%</span>
+                                    </div>
+                                    <h5 class="mb-0">24.60 $PXPT</h5>
+                                    <small class="text-muted">per unit</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="text-warning mb-3">Transaction Volume (24h)</h6>
+                        <div class="progress mb-1" style="height: 25px;">
+                            <div class="progress-bar bg-info" style="width: 45%;">Pixels: 45%</div>
+                            <div class="progress-bar bg-warning" style="width: 35%;">Materials: 35%</div>
+                            <div class="progress-bar bg-purple" style="width: 20%;">Gems: 20%</div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">Total Volume: 12,450 $PXPT</small>
+                            <small class="text-muted">Transactions: 128</small>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="text-warning mb-3">Market Intervention</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Resource Type</label>
+                                <select class="form-select">
+                                    <option value="pixels">Pixels</option>
+                                    <option value="materials">Materials</option>
+                                    <option value="gems">Gems</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Action Type</label>
+                                <select class="form-select">
+                                    <option value="buy">Buy (Increase Price)</option>
+                                    <option value="sell">Sell (Decrease Price)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Amount</label>
+                                <input type="number" class="form-control" value="500" step="100" min="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Target Price Change</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" value="5" step="1" min="1" max="20">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="button" class="btn btn-warning w-100">
+                                    <i class="fas fa-balance-scale me-2"></i>Execute Market Intervention
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Airdrop Planning Tab -->
+    <div class="tab-pane fade" id="airdrop" role="tabpanel" aria-labelledby="airdrop-tab">
+        <div class="row mb-4">
+            <!-- Airdrop Metrics -->
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-parachute-box me-2"></i>Airdrop Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-1">Total Eligible Users</h6>
+                            {% set eligible_count = users|selectattr('0.wallet_address', 'defined')|selectattr('1.level', 'ge', 5)|selectattr('1.buildings_owned', 'ge', 1)|selectattr('1.pixel_art_created', 'ge', 1)|list|length %}
+                            <h3 class="text-success mb-0">{{ eligible_count }}</h3>
+                            <small class="text-muted">{{ ((eligible_count / users|length) * 100)|round }}% of all users</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-1">Airdrop Allocation</h6>
+                            <h3 class="text-warning mb-0">125,000 $PXPT</h3>
+                            <small class="text-muted">Fixed allocation</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-1">Per-User Average</h6>
+                            {% if eligible_count > 0 %}
+                            <h3 class="text-info mb-0">{{ (125000 / eligible_count)|round(2) }} $PXPT</h3>
+                            {% else %}
+                            <h3 class="text-info mb-0">0 $PXPT</h3>
+                            {% endif %}
+                            <small class="text-muted">Based on current eligibility</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-1">Time Until Airdrop</h6>
+                            <h3 class="text-danger mb-0" id="airdropCountdown">7 days 12 hours</h3>
+                            <small class="text-muted">Scheduled for May 10, 2025</small>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary mb-2">
+                                <i class="fas fa-cog me-2"></i>Configure Airdrop
+                            </button>
+                            <button type="button" class="btn btn-outline-warning">
+                                <i class="fas fa-download me-2"></i>Download Snapshot
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Eligibility Criteria -->
+            <div class="col-md-8 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Eligibility Criteria</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-light border-opacity-10 rounded-3 mb-3">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="walletRequirement" checked>
+                                            <label class="form-check-label" for="walletRequirement">
+                                                <strong>Wallet Requirement</strong>
+                                            </label>
+                                        </div>
+                                        <p class="text-muted small mb-0">User must register a wallet address to receive tokens</p>
+                                        <div class="mt-2">
+                                            <span class="badge bg-success">{{ users|selectattr('0.wallet_address', 'defined')|list|length }} users qualify</span>
+                                            <span class="badge bg-secondary">{{ ((users|selectattr('0.wallet_address', 'defined')|list|length / users|length) * 100)|round }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-light border-opacity-10 rounded-3 mb-3">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="levelRequirement" checked>
+                                            <label class="form-check-label" for="levelRequirement">
+                                                <strong>Level Requirement</strong>
+                                            </label>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <p class="text-muted small mb-0 me-2">Minimum Level:</p>
+                                            <input type="number" class="form-control form-control-sm" style="width: 70px;" value="5" min="1">
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="badge bg-success">{{ users|selectattr('1.level', 'ge', 5)|list|length }} users qualify</span>
+                                            <span class="badge bg-secondary">{{ ((users|selectattr('1.level', 'ge', 5)|list|length / users|length) * 100)|round }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-light border-opacity-10 rounded-3 mb-3">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="buildingRequirement" checked>
+                                            <label class="form-check-label" for="buildingRequirement">
+                                                <strong>Building Requirement</strong>
+                                            </label>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <p class="text-muted small mb-0 me-2">Minimum Buildings:</p>
+                                            <input type="number" class="form-control form-control-sm" style="width: 70px;" value="1" min="1">
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="badge bg-success">{{ users|selectattr('1.buildings_owned', 'ge', 1)|list|length }} users qualify</span>
+                                            <span class="badge bg-secondary">{{ ((users|selectattr('1.buildings_owned', 'ge', 1)|list|length / users|length) * 100)|round }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-light border-opacity-10 rounded-3 mb-3">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="artRequirement" checked>
+                                            <label class="form-check-label" for="artRequirement">
+                                                <strong>Pixel Art Requirement</strong>
+                                            </label>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <p class="text-muted small mb-0 me-2">Minimum Created:</p>
+                                            <input type="number" class="form-control form-control-sm" style="width: 70px;" value="1" min="1">
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="badge bg-success">{{ users|selectattr('1.pixel_art_created', 'ge', 1)|list|length }} users qualify</span>
+                                            <span class="badge bg-secondary">{{ ((users|selectattr('1.pixel_art_created', 'ge', 1)|list|length / users|length) * 100)|round }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-light border-opacity-10 rounded-3">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="activityRequirement">
+                                            <label class="form-check-label" for="activityRequirement">
+                                                <strong>Activity Requirement</strong>
+                                            </label>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <p class="text-muted small mb-0 me-2">Active Within:</p>
+                                            <select class="form-select form-select-sm" style="width: 120px;">
+                                                <option value="7">7 days</option>
+                                                <option value="14">14 days</option>
+                                                <option value="30">30 days</option>
+                                            </select>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="badge bg-success">124 users qualify</span>
+                                            <span class="badge bg-secondary">62%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-light border-opacity-10 rounded-3">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="referralRequirement">
+                                            <label class="form-check-label" for="referralRequirement">
+                                                <strong>Referral Requirement</strong>
+                                            </label>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <p class="text-muted small mb-0 me-2">Minimum Referrals:</p>
+                                            <input type="number" class="form-control form-control-sm" style="width: 70px;" value="1" min="1">
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="badge bg-success">58 users qualify</span>
+                                            <span class="badge bg-secondary">29%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-dark border border-success border-opacity-25 rounded-3 p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="text-success mb-1">Combined Eligibility</h5>
+                                    <p class="text-muted mb-0">Users meeting all selected criteria</p>
+                                </div>
+                                <h3 class="text-success mb-0">{{ eligible_count }}</h3>
+                            </div>
+                            <div class="progress mt-3" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: {{ ((eligible_count / users|length) * 100)|round }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">0</small>
+                                <small class="text-muted">{{ users|length }} users</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card bg-dark stat-card">
+                    <div class="card-header bg-dark border-0">
+                        <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Airdrop Distribution Model</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-warning mb-3">Distribution Method</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="distributionMethod" id="methodEqual" checked>
+                                    <label class="form-check-label" for="methodEqual">
+                                        Equal Distribution
+                                        <small class="d-block text-muted">All eligible users receive the same amount</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="distributionMethod" id="methodLevel">
+                                    <label class="form-check-label" for="methodLevel">
+                                        Level-Based Distribution
+                                        <small class="d-block text-muted">Higher level users receive more tokens</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="distributionMethod" id="methodActivity">
+                                    <label class="form-check-label" for="methodActivity">
+                                        Activity-Based Distribution
+                                        <small class="d-block text-muted">More active users receive more tokens</small>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="distributionMethod" id="methodComplex">
+                                    <label class="form-check-label" for="methodComplex">
+                                        Complex Weighted Formula
+                                        <small class="d-block text-muted">Combination of level, activity, and game metrics</small>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-warning mb-3">Airdrop Schedule</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="scheduleMethod" id="scheduleOnce" checked>
+                                    <label class="form-check-label" for="scheduleOnce">
+                                        One-Time Distribution
+                                        <small class="d-block text-muted">All tokens distributed at once</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="scheduleMethod" id="scheduleMonthly">
+                                    <label class="form-check-label" for="scheduleMonthly">
+                                        Monthly Vesting
+                                        <small class="d-block text-muted">Tokens released over 6 months</small>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="scheduleMethod" id="scheduleCustom">
+                                    <label class="form-check-label" for="scheduleCustom">
+                                        Custom Schedule
+                                        <small class="d-block text-muted">Define custom vesting periods</small>
+                                    </label>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <label class="form-label">Airdrop Date</label>
+                                    <input type="date" class="form-control" value="2025-05-10">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <button type="button" class="btn btn-warning w-100">
+                                    <i class="fas fa-calculator me-2"></i>Simulate Distribution
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-success w-100">
+                                    <i class="fas fa-save me-2"></i>Save Airdrop Configuration
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endif %}
+
+{% block scripts %}
+{{ super() }}
+<!-- Admin Dashboard Charts & Functionality -->
+<script>
+// Set up Chart.js defaults for dark theme
+Chart.defaults.color = '#adb5bd';
+Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+// User Growth Chart
+const userGrowthCtx = document.getElementById('userGrowthChart');
+if (userGrowthCtx) {
+    new Chart(userGrowthCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+            datasets: [{
+                label: 'New Users',
+                data: [18, 25, 40, 65, 74],
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Token Distribution Chart
+const tokenDistributionCtx = document.getElementById('tokenDistributionChart');
+if (tokenDistributionCtx) {
+    new Chart(tokenDistributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Top 10%', 'Next 20%', 'Middle 30%', 'Bottom 40%'],
+            datasets: [{
+                data: [45, 30, 15, 10],
+                backgroundColor: [
+                    '#f39c12', // Yellow
+                    '#3498db', // Blue
+                    '#2ecc71', // Green
+                    '#9b59b6'  // Purple
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Activity Breakdown Chart
+const activityCtx = document.getElementById('activityChart');
+if (activityCtx) {
+    new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Mining', 'Art Creation', 'Building', 'Market Trading', 'Mini-Games'],
+            datasets: [{
+                label: 'Activity Distribution',
+                data: [35, 25, 15, 10, 15],
+                backgroundColor: [
+                    'rgba(52, 152, 219, 0.7)', // Blue
+                    'rgba(155, 89, 182, 0.7)', // Purple
+                    'rgba(46, 204, 113, 0.7)', // Green
+                    'rgba(230, 126, 34, 0.7)', // Orange
+                    'rgba(241, 196, 15, 0.7)'  // Yellow
+                ],
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Market Price Chart
+const marketCtx = document.getElementById('marketPriceChart');
+if (marketCtx) {
+    new Chart(marketCtx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+            datasets: [
+                {
+                    label: 'Pixels',
+                    data: [2.10, 2.25, 2.30, 2.38, 2.45],
+                    borderColor: '#3498db',
+                    tension: 0.3,
+                    pointRadius: 3
+                },
+                {
+                    label: 'Materials',
+                    data: [6.20, 6.10, 5.90, 5.85, 5.80],
+                    borderColor: '#f39c12',
+                    tension: 0.3,
+                    pointRadius: 3
+                },
+                {
+                    label: 'Gems',
+                    data: [18.50, 19.80, 21.20, 22.90, 24.60],
+                    borderColor: '#9b59b6',
+                    tension: 0.3,
+                    pointRadius: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw + ' $PXPT';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' $PXPT';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// User Search & Filtering
+const userSearch = document.getElementById('userSearch');
+const filterActivity = document.getElementById('filterActivity');
+const filterWallet = document.getElementById('filterWallet');
+const applyFilters = document.getElementById('applyFilters');
+const userTable = document.getElementById('userTable');
+
+if (applyFilters && userTable) {
+    applyFilters.addEventListener('click', function() {
+        const searchTerm = userSearch?.value?.toLowerCase() || '';
+        const activityFilter = filterActivity?.value || 'all';
+        const walletFilter = filterWallet?.value || 'all';
+        
+        const rows = userTable.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const hasWallet = !row.querySelector('td:nth-child(4)').textContent.includes('Not set');
+            
+            // Search filter
+            const matchesSearch = searchTerm === '' || username.includes(searchTerm);
+            
+            // Wallet filter
+            let matchesWallet = true;
+            if (walletFilter === 'yes') {
+                matchesWallet = hasWallet;
+            } else if (walletFilter === 'no') {
+                matchesWallet = !hasWallet;
+            }
+            
+            // Simple activity filter for demo
+            // In reality, this would use server-side filtering
+            let matchesActivity = true;
+            
+            // Show/hide based on combined filters
+            if (matchesSearch && matchesWallet && matchesActivity) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Select all checkbox functionality
+const selectAllUsers = document.getElementById('selectAllUsers');
+if (selectAllUsers && userTable) {
+    selectAllUsers.addEventListener('change', function() {
+        const checkboxes = userTable.querySelectorAll('.user-select');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAllUsers.checked;
+        });
+    });
+}
+
+// Airdrop Countdown Timer
+const airdropCountdown = document.getElementById('airdropCountdown');
+if (airdropCountdown) {
+    const targetDate = new Date('May 10, 2025 12:00:00').getTime();
+    
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+        
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        
+        airdropCountdown.textContent = days + ' days ' + hours + ' hours';
+        
+        setTimeout(updateCountdown, 3600000); // Update every hour
+    }
+    
+    updateCountdown();
+}
+</script>
 {% endblock %}
