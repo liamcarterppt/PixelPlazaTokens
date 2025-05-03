@@ -140,10 +140,18 @@
         <p class="d-block d-sm-none">Build your pixel empire and earn tokens!</p>
     </div>
     <div class="col-md-6 d-flex flex-wrap justify-content-center justify-content-md-end align-items-center gap-2">
-        <a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary btn-sm btn-md-lg">
+        {% if not login_required %}
+        <a href="{{ url_for('tasks') }}?id={{ user.telegram_id }}" class="btn btn-outline-success btn-sm">
+            <i class="fas fa-tasks me-1"></i><span class="d-none d-sm-inline">Tasks</span>
+        </a>
+        <a href="{{ url_for('referrals') }}?id={{ user.telegram_id }}" class="btn btn-outline-info btn-sm">
+            <i class="fas fa-user-friends me-1"></i><span class="d-none d-sm-inline">Referrals</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary btn-sm">
             <i class="fas fa-trophy me-1"></i><span class="d-none d-sm-inline">Leaderboard</span><span class="d-inline d-sm-none">Leaders</span>
         </a>
-        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm btn-md-lg">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
             <i class="fas fa-home me-1"></i><span>Home</span>
         </a>
     </div>
@@ -162,6 +170,11 @@
                 <label for="username" class="form-label">Username</label>
                 <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
                 <div class="form-text">Choose a unique username for the game</div>
+            </div>
+            <div class="mb-3">
+                <label for="referral-code" class="form-label">Referral Code <span class="text-muted">(Optional)</span></label>
+                <input type="text" class="form-control" id="referral-code" placeholder="Enter referral code if you have one">
+                <div class="form-text">Get a bonus 3 $PXPT by using a friend's referral code</div>
             </div>
             <button type="submit" class="btn btn-primary w-100 py-2">
                 <i class="fas fa-gamepad me-2"></i>Start Playing

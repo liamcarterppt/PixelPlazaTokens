@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}Referrals - Pixel Plaza{% endblock %}
+
+{% block extra_css %}
+<style>
+    .referral-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .referral-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: #273746;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .referral-code-box {
+        display: flex;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .referral-code {
+        font-family: monospace;
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+        color: #3498db;
+        margin-right: 10px;
+        flex-grow: 1;
+    }
+    
+    .referral-link {
+        word-break: break-all;
+        margin-top: 10px;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+    
+    .status-card {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .status-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-right: 15px;
+    }
+    
+    .status-active {
+        background-color: #2ecc71;
+    }
+    
+    .status-locked {
+        background-color: #e74c3c;
+    }
+    
+    .referred-user-list {
+        margin-top: 20px;
+    }
+    
+    .referred-user-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .referred-username {
+        display: flex;
+        align-items: center;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background-color: #3498db;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-weight: bold;
+    }
+    
+    .action-btns {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    @media (max-width: 576px) {
+        .referral-code-box {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .referral-code {
+            margin-right: 0;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .copy-btn {
+            width: 100%;
+        }
+        
+        .status-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .status-icon {
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
+        
+        .referred-user-item {
+            flex-direction: column;
+        }
+        
+        .referred-username {
+            margin-bottom: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-6">
+            <h1><i class="fas fa-user-friends me-2"></i> Referrals</h1>
+            <p class="lead">Invite friends and earn bonus tokens!</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <a href="{{ url_for('web_game') }}?id={{ user.telegram_id }}" class="btn btn-outline-primary mt-2">
+                <i class="fas fa-gamepad me-2"></i> Back to Game
+            </a>
+        </div>
+    </div>
+    
+    <div class="referral-container mt-4">
+        <!-- Status Card -->
+        <div class="referral-card">
+            <div class="status-card">
+                {% if game_state.level >= min_level %}
+                <div class="status-icon status-active">
+                    <i class="fas fa-check-circle fa-lg"></i>
+                </div>
+                <div>
+                    <h5>Referral System Active</h5>
+                    <p class="mb-0">You've unlocked the referral system and can invite friends!</p>
+                </div>
+                {% else %}
+                <div class="status-icon status-locked">
+                    <i class="fas fa-lock fa-lg"></i>
+                </div>
+                <div>
+                    <h5>Referral System Locked</h5>
+                    <p class="mb-0">Reach Level {{ min_level }} to unlock the referral system.</p>
+                    <div class="progress mt-2" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: {{ (game_state.level / min_level * 100) }}%"></div>
+                    </div>
+                    <div class="text-end mt-1">
+                        <small>Level {{ game_state.level }}/{{ min_level }}</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if game_state.level >= min_level %}
+                {% if user.referral_code %}
+                <h4>Your Referral Code</h4>
+                <div class="referral-code-box">
+                    <div class="referral-code">{{ user.referral_code }}</div>
+                    <button class="btn btn-primary btn-sm copy-btn" id="copyReferralCode">
+                        <i class="fas fa-copy me-1"></i> Copy
+                    </button>
+                </div>
+                <div class="referral-link">
+                    <small>Share this link: https://pixel-plaza.io/join?ref={{ user.referral_code }}</small>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <h5>Generate Your Referral Code</h5>
+                    <p>Create a unique code to invite your friends and earn rewards!</p>
+                    <button class="btn btn-primary" id="generateReferralBtn">
+                        <i class="fas fa-magic me-1"></i> Generate Referral Code
+                    </button>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+        
+        <!-- Rewards Card -->
+        <div class="referral-card">
+            <h4>Referral Rewards</h4>
+            <ul class="list-unstyled">
+                <li class="mb-2">
+                    <i class="fas fa-coins text-warning me-2"></i> You get <span class="text-warning">5 $PXPT</span> for each friend who joins using your code
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-gift text-success me-2"></i> Your friends get <span class="text-success">3 $PXPT</span> for using your code
+                </li>
+                <li>
+                    <i class="fas fa-tasks text-info me-2"></i> Referring friends helps complete weekly tasks for additional rewards
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Referred Friends Card -->
+        <div class="referral-card">
+            <h4>
+                <i class="fas fa-users me-2"></i> Your Referrals 
+                <span class="badge bg-primary">{{ game_state.referral_count }}</span>
+            </h4>
+            
+            {% if referred_users %}
+            <div class="referred-user-list">
+                {% for referred_user in referred_users %}
+                <div class="referred-user-item">
+                    <div class="referred-username">
+                        <div class="user-avatar">{{ referred_user.username[0]|upper }}</div>
+                        <div>
+                            <div>{{ referred_user.username }}</div>
+                            <small class="text-muted">Joined: {{ referred_user.registration_date.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                    </div>
+                    <div class="badge bg-success">Referred</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-3 text-muted">
+                <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                <p>You haven't referred any friends yet.</p>
+                {% if user.referral_code %}
+                <p>Share your referral code <strong>{{ user.referral_code }}</strong> to get started!</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Referral System</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resultModalBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="resultModalCloseBtn" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const telegramId = '{{ user.telegram_id }}';
+    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+    const resultModalBody = document.getElementById('resultModalBody');
+    const resultModalCloseBtn = document.getElementById('resultModalCloseBtn');
+    
+    // Copy referral code
+    const copyReferralCodeBtn = document.getElementById('copyReferralCode');
+    if (copyReferralCodeBtn) {
+        copyReferralCodeBtn.addEventListener('click', function() {
+            const referralCode = document.querySelector('.referral-code').textContent;
+            navigator.clipboard.writeText(referralCode).then(() => {
+                this.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-copy me-1"></i> Copy';
+                }, 2000);
+            });
+        });
+    }
+    
+    // Generate referral code
+    const generateReferralBtn = document.getElementById('generateReferralBtn');
+    if (generateReferralBtn) {
+        generateReferralBtn.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+            
+            fetch('/api/generate_referral_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `telegram_id=${telegramId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultModalBody.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i> ${data.message}
+                        </div>
+                    `;
+                    
+                    resultModalCloseBtn.addEventListener('click', function() {
+                        location.reload();
+                    });
+                } else {
+                    resultModalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i> ${data.message}
+                        </div>
+                    `;
+                    
+                    // Re-enable button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-magic me-1"></i> Generate Referral Code';
+                }
+                
+                resultModal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultModalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i> An error occurred. Please try again.
+                    </div>
+                `;
+                
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic me-1"></i> Generate Referral Code';
+                
+                resultModal.show();
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
