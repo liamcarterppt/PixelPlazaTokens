@@ -7,20 +7,42 @@
     .game-container {
         max-width: 500px;
         margin: 0 auto;
+        width: 100%;
     }
     
     .telegram-style {
         border-radius: 10px;
-        padding: 20px;
+        padding: 15px;
         background-color: #273746;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    @media (min-width: 768px) {
+        .telegram-style {
+            padding: 20px;
+        }
     }
     
     .game-action-btn {
         border-radius: 8px;
         margin-bottom: 10px;
-        padding: 12px;
+        padding: 10px;
         font-weight: 500;
         transition: all 0.2s;
+        font-size: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+    
+    @media (min-width: 576px) {
+        .game-action-btn {
+            padding: 12px;
+            font-size: 1rem;
+        }
     }
     
     .game-action-btn:hover {
@@ -41,16 +63,34 @@
     }
     
     .login-container {
+        width: 100%;
         max-width: 350px;
-        margin: 40px auto;
+        margin: 20px auto;
+        padding: 15px;
+    }
+    
+    @media (min-width: 576px) {
+        .login-container {
+            margin: 40px auto;
+            padding: 20px;
+        }
     }
     
     .stat-badge {
-        font-size: 0.9rem;
-        padding: 5px 10px;
-        margin-right: 8px;
-        margin-bottom: 8px;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        margin-right: 6px;
+        margin-bottom: 6px;
         display: inline-block;
+    }
+    
+    @media (min-width: 576px) {
+        .stat-badge {
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
     }
     
     .result-box {
@@ -65,42 +105,76 @@
         border-radius: 8px;
         margin-bottom: 8px;
         background-color: rgba(255, 255, 255, 0.05);
+        word-break: break-word;
+    }
+    
+    /* Responsive text sizes */
+    @media (max-width: 576px) {
+        h4, h5 {
+            font-size: 1.1rem;
+        }
+        
+        p, div {
+            font-size: 0.9rem;
+        }
+        
+        .small {
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Improve modal responsiveness */
+    .modal-dialog {
+        margin: 10px;
+        width: calc(100% - 20px);
+        max-width: 500px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-6">
-        <h1><i class="fas fa-gamepad me-2"></i>Pixel Plaza Game</h1>
-        <p class="lead">Build your pixel empire and earn $PXPT tokens!</p>
+    <div class="col-md-6 mb-3 mb-md-0">
+        <h1 class="fs-2 fs-md-1"><i class="fas fa-gamepad me-2"></i>Pixel Plaza Game</h1>
+        <p class="lead d-none d-sm-block">Build your pixel empire and earn $PXPT tokens!</p>
+        <p class="d-block d-sm-none">Build your pixel empire and earn tokens!</p>
     </div>
-    <div class="col-md-6 text-md-end">
-        <a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary mt-2">
-            <i class="fas fa-trophy me-2"></i>Leaderboard
+    <div class="col-md-6 d-flex flex-wrap justify-content-center justify-content-md-end align-items-center gap-2">
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary btn-sm btn-md-lg">
+            <i class="fas fa-trophy me-1"></i><span class="d-none d-sm-inline">Leaderboard</span><span class="d-inline d-sm-none">Leaders</span>
         </a>
-        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary mt-2 ms-2">
-            <i class="fas fa-home me-2"></i>Home
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm btn-md-lg">
+            <i class="fas fa-home me-1"></i><span>Home</span>
         </a>
     </div>
 </div>
 
 {% if login_required %}
 <div class="login-container telegram-style">
-    <h3 class="text-center mb-4">Join the Game</h3>
-    <p class="text-center">Create a username to start playing Pixel Plaza Token game!</p>
-    
-    <div id="registration-error" class="alert alert-danger d-none mb-3"></div>
-    
-    <form id="registration-form" class="mb-3">
-        <div class="mb-3">
-            <label for="username" class="form-label">Username</label>
-            <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
+    <div class="px-2 px-sm-3 py-3 py-sm-4">
+        <h3 class="text-center mb-3 mb-sm-4 fs-4 fs-sm-3">Join the Game</h3>
+        <p class="text-center">Create a username to start playing Pixel Plaza Token game!</p>
+        
+        <div id="registration-error" class="alert alert-danger d-none mb-3"></div>
+        
+        <form id="registration-form" class="mb-3">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
+                <div class="form-text">Choose a unique username for the game</div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2">
+                <i class="fas fa-gamepad me-2"></i>Start Playing
+            </button>
+        </form>
+        
+        <div class="text-center">
+            <p class="text-muted small mb-1">Or play with Telegram</p>
+            <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-sm btn-outline-info">
+                <i class="fab fa-telegram me-1"></i>Open Telegram Bot
+            </a>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Start Playing</button>
-    </form>
-    
-    <p class="text-center text-muted small">You can also play via our <a href="https://t.me/your_bot_username" target="_blank">Telegram Bot</a></p>
+    </div>
 </div>
 {% else %}
 
@@ -182,40 +256,45 @@
         
         <div class="actions">
             <div class="row g-2">
-                <div class="col-6">
+                <div class="col-6 col-sm-4">
                     <button class="btn btn-primary w-100 game-action-btn game-action" data-action="daily">
                         <i class="fas fa-calendar-day d-block mb-1"></i>
-                        Daily Claim
+                        <span class="d-none d-sm-inline">Daily Claim</span>
+                        <span class="d-inline d-sm-none">Daily</span>
                     </button>
                 </div>
-                <div class="col-6">
+                <div class="col-6 col-sm-4">
                     <button class="btn btn-warning w-100 game-action-btn game-action" data-action="mine">
                         <i class="fas fa-hammer d-block mb-1"></i>
-                        Mine Pixels
+                        <span class="d-none d-sm-inline">Mine Pixels</span>
+                        <span class="d-inline d-sm-none">Mine</span>
                     </button>
                 </div>
-                <div class="col-6">
+                <div class="col-6 col-sm-4">
                     <button class="btn btn-danger w-100 game-action-btn game-action" data-action="create">
                         <i class="fas fa-palette d-block mb-1"></i>
-                        Create Art
+                        <span class="d-none d-sm-inline">Create Art</span>
+                        <span class="d-inline d-sm-none">Create</span>
                     </button>
                 </div>
-                <div class="col-6">
+                <div class="col-6 col-sm-4">
                     <button class="btn btn-success w-100 game-action-btn game-action" data-action="build">
                         <i class="fas fa-building d-block mb-1"></i>
-                        Build
+                        <span>Build</span>
                     </button>
                 </div>
-                <div class="col-6">
+                <div class="col-6 col-sm-4">
                     <button class="btn btn-info w-100 game-action-btn game-action" data-action="collect">
                         <i class="fas fa-piggy-bank d-block mb-1"></i>
-                        Collect Income
+                        <span class="d-none d-sm-inline">Collect Income</span>
+                        <span class="d-inline d-sm-none">Collect</span>
                     </button>
                 </div>
-                <div class="col-6">
+                <div class="col-6 col-sm-4">
                     <button class="btn btn-outline-light w-100 game-action-btn" id="wallet-btn">
                         <i class="fas fa-wallet d-block mb-1"></i>
-                        Set Wallet
+                        <span class="d-none d-sm-inline">Set Wallet</span>
+                        <span class="d-inline d-sm-none">Wallet</span>
                     </button>
                 </div>
             </div>
@@ -230,24 +309,24 @@
             {% if transactions %}
                 {% for tx in transactions %}
                 <div class="transaction-item">
-                    <div class="d-flex justify-content-between">
-                        <div>
+                    <div class="d-flex flex-column flex-sm-row justify-content-between">
+                        <div class="mb-2 mb-sm-0">
                             {% if tx.type == 'daily_reward' %}
-                                <span class="badge bg-primary me-2">Daily</span>
+                                <span class="badge bg-primary me-1">Daily</span>
                             {% elif tx.type == 'mining' %}
-                                <span class="badge bg-warning me-2">Mining</span>
+                                <span class="badge bg-warning me-1">Mining</span>
                             {% elif tx.type == 'pixel_art' %}
-                                <span class="badge bg-danger me-2">Pixel Art</span>
+                                <span class="badge bg-danger me-1">Pixel Art</span>
                             {% elif tx.type == 'building_income' %}
-                                <span class="badge bg-success me-2">Income</span>
+                                <span class="badge bg-success me-1">Income</span>
                             {% elif tx.type == 'building_purchase' %}
-                                <span class="badge bg-info me-2">Purchase</span>
+                                <span class="badge bg-info me-1">Purchase</span>
                             {% else %}
-                                <span class="badge bg-secondary me-2">{{ tx.type }}</span>
+                                <span class="badge bg-secondary me-1">{{ tx.type }}</span>
                             {% endif %}
-                            {{ tx.description }}
+                            <span class="small d-inline-block text-truncate" style="max-width: 180px;">{{ tx.description }}</span>
                         </div>
-                        <div class="{{ 'text-success' if tx.amount > 0 else 'text-danger' }}">
+                        <div class="{{ 'text-success' if tx.amount > 0 else 'text-danger' }} fw-bold">
                             {{ tx.amount|round(2) }} $PXPT
                         </div>
                     </div>
@@ -296,6 +375,35 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Add resize handler for responsive layout
+    window.addEventListener('resize', function() {
+        updateResponsiveElements();
+    });
+    
+    function updateResponsiveElements() {
+        const isMobile = window.innerWidth < 576;
+        document.querySelectorAll('.game-action').forEach(button => {
+            const action = button.dataset.action;
+            const buttonText = getTextForAction(action, isMobile);
+            
+            // Get the span (if it exists) to avoid replacing the icon
+            const iconEl = button.querySelector('i');
+            if (iconEl) {
+                // Clear button content
+                button.innerHTML = '';
+                // Add back the icon
+                button.appendChild(iconEl);
+                // Add text with appropriate class for responsive display
+                if (isMobile) {
+                    button.innerHTML += `<span class="d-inline d-sm-none">${getTextForAction(action, true)}</span>
+                    <span class="d-none d-sm-inline">${getTextForAction(action, false)}</span>`;
+                } else {
+                    button.innerHTML += getTextForAction(action, false);
+                }
+            }
+        });
+    }
+    
     {% if not login_required %}
     const telegramId = '{{ user.telegram_id }}';
     
@@ -329,7 +437,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 // Reset button text
-                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${getTextForAction(action)}`;
+                const isMobile = window.innerWidth < 576;
+                const buttonText = getTextForAction(action, isMobile);
+                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${buttonText}`;
                 
                 // Show result
                 resultEl.textContent = data.message;
@@ -346,7 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.game-action').forEach(btn => {
                     btn.disabled = false;
                 });
-                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${getTextForAction(action)}`;
+                const isMobile = window.innerWidth < 576;
+                const buttonText = getTextForAction(action, isMobile);
+                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${buttonText}`;
                 resultEl.textContent = 'An error occurred. Please try again.';
                 resultEl.className = 'result-box alert alert-danger';
                 resultEl.style.display = 'block';
@@ -462,14 +574,25 @@ function getIconForAction(action) {
     }
 }
 
-function getTextForAction(action) {
-    switch (action) {
-        case 'daily': return 'Daily Claim';
-        case 'mine': return 'Mine Pixels';
-        case 'create': return 'Create Art';
-        case 'build': return 'Build';
-        case 'collect': return 'Collect Income';
-        default: return action;
+function getTextForAction(action, isMobile = false) {
+    if (isMobile) {
+        switch (action) {
+            case 'daily': return 'Daily';
+            case 'mine': return 'Mine';
+            case 'create': return 'Create';
+            case 'build': return 'Build';
+            case 'collect': return 'Collect';
+            default: return action;
+        }
+    } else {
+        switch (action) {
+            case 'daily': return 'Daily Claim';
+            case 'mine': return 'Mine Pixels';
+            case 'create': return 'Create Art';
+            case 'build': return 'Build';
+            case 'collect': return 'Collect Income';
+            default: return action;
+        }
     }
 }
 </script>
