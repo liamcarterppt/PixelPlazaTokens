@@ -174,7 +174,6 @@
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <h6 class="text-muted mb-1">Active Today</h6>
-                                {% set active_today = users|selectattr('1.last_active', 'defined')|selectattr('1.last_active', 'ge', now().replace(hour=0, minute=0, second=0))|list|length %}
                                 <h3 class="mb-0">{{ active_today }}</h3>
                             </div>
                             <div class="stat-icon bg-success">
@@ -195,7 +194,7 @@
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <h6 class="text-muted mb-1">$PXPT Circulating</h6>
-                                <h3 class="mb-0">{{ users|sum(attribute='1.token_balance')|round(2) }}</h3>
+                                <h3 class="mb-0">{{ total_tokens|round(2) }}</h3>
                             </div>
                             <div class="stat-icon bg-warning">
                                 <i class="fas fa-coins"></i>
@@ -290,28 +289,28 @@
                                         <i class="fas fa-paint-brush"></i>
                                     </div>
                                     <p class="mt-2">Pixels</p>
-                                    <h5>{{ users|sum(attribute='1.pixels') }}</h5>
+                                    <h5>{{ total_pixels }}</h5>
                                 </div>
                                 <div class="col-3 text-center">
                                     <div class="icon-circle" style="background-color: #2ecc71;">
                                         <i class="fas fa-bolt"></i>
                                     </div>
                                     <p class="mt-2">Energy</p>
-                                    <h5>{{ users|sum(attribute='1.energy') }}</h5>
+                                    <h5>{{ total_energy }}</h5>
                                 </div>
                                 <div class="col-3 text-center">
                                     <div class="icon-circle" style="background-color: #f39c12;">
                                         <i class="fas fa-hammer"></i>
                                     </div>
                                     <p class="mt-2">Materials</p>
-                                    <h5>{{ users|sum(attribute='1.materials') }}</h5>
+                                    <h5>{{ total_materials }}</h5>
                                 </div>
                                 <div class="col-3 text-center">
                                     <div class="icon-circle" style="background-color: #9b59b6;">
                                         <i class="fas fa-gem"></i>
                                     </div>
                                     <p class="mt-2">Gems</p>
-                                    <h5>{{ users|sum(attribute='1.gems') }}</h5>
+                                    <h5>{{ total_gems }}</h5>
                                 </div>
                             </div>
                         </div>

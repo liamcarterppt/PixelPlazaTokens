@@ -463,23 +463,43 @@ def admin():
         GameState.token_balance.desc()
     ).all()
     
-    # Get current datetime for active user calculations and projections
+    # Calculate stats for the admin dashboard
     from datetime import datetime, timedelta
-    now = datetime.utcnow()
     
-    # Get game economy stats
+    # User stats
+    total_users = len(users)
+    users_with_wallet = sum(1 for user, _ in users if user.wallet_address)
+    
+    # Game economy stats
     total_tokens = sum(gs.token_balance for _, gs in users) if users else 0
     total_pixels = sum(gs.pixels for _, gs in users) if users else 0
+    total_energy = sum(gs.energy for _, gs in users) if users else 0
+    total_materials = sum(gs.materials for _, gs in users) if users else 0
+    total_gems = sum(gs.gems for _, gs in users) if users else 0
     total_buildings = sum(gs.buildings_owned for _, gs in users) if users else 0
+    total_art_created = sum(gs.pixel_art_created for _, gs in users) if users else 0
+    
+    # Active users counts
+    today = datetime.utcnow().date()
+    active_today = 0
+    for _, gs in users:
+        if gs.last_active and gs.last_active.date() == today:
+            active_today += 1
     
     return render_template(
         'admin.html', 
         authenticated=True, 
         users=users,
-        now=now,
+        total_users=total_users,
+        users_with_wallet=users_with_wallet,
+        active_today=active_today,
         total_tokens=total_tokens,
         total_pixels=total_pixels,
-        total_buildings=total_buildings
+        total_energy=total_energy,
+        total_materials=total_materials,
+        total_gems=total_gems,
+        total_buildings=total_buildings,
+        total_art_created=total_art_created
     )
 
 @app.route('/export_csv')
