@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 from models import User, GameState, Transaction
 from app import db
 from config import (
-    DAILY_REWARD, REFERRAL_BONUS, MAX_ENERGY, ENERGY_REGEN_RATE,
-    XP_PER_LEVEL, MINING_REWARD, BUILDING_COST, BUILDING_INCOME,
-    PIXEL_ART_COST, PIXEL_ART_REWARD
+    DAILY_REWARD, DAILY_STREAK_BONUS, 
+    MINING_REWARD_MIN, MINING_REWARD_MAX, MINING_ENERGY_COST, MINING_PIXEL_GAIN,
+    ART_TOKEN_REWARD_MIN, ART_TOKEN_REWARD_MAX, ART_ENERGY_COST, ART_PIXEL_COST,
+    BUILDING_COST_BASE, BUILDING_COST_MULTIPLIER, BUILDING_INCOME_BASE, COLLECTION_COOLDOWN_HOURS
 )
 
 logger = logging.getLogger(__name__)
@@ -84,12 +85,12 @@ class GameMechanics:
         
         # Calculate bonus based on streak
         streak_bonus = min(game_state.daily_streak, 7)  # Cap bonus at 7 days
-        total_reward = DAILY_REWARD + (streak_bonus - 1)
+        total_reward = DAILY_REWARD + (streak_bonus - 1) * DAILY_STREAK_BONUS
         
         # Update game state
         game_state.token_balance += total_reward
         game_state.last_daily_claim = now
-        game_state.energy = min(game_state.energy + 50, MAX_ENERGY)  # Refill energy
+        game_state.energy = min(game_state.energy + 50, 100)  # Refill energy
         
         # Record transaction
         daily_transaction = Transaction(
@@ -114,25 +115,22 @@ class GameMechanics:
     def _process_mining(self, user, game_state):
         """Process mining action."""
         # Check if user has enough energy
-        if game_state.energy < 10:
+        if game_state.energy < MINING_ENERGY_COST:
             return {
                 "success": False,
-                "message": f"Not enough energy! Current: {game_state.energy}/100, Need: 10",
+                "message": f"Not enough energy! Current: {game_state.energy}/100, Need: {MINING_ENERGY_COST}",
                 "game_state": self._get_game_state_dict(game_state)
             }
         
         # Calculate mining reward with some randomness
-        base_reward = MINING_REWARD * game_state.level
-        randomness = random.uniform(0.8, 1.2)  # ±20% random variation
-        reward = round(base_reward * randomness, 2)
-        
-        # Calculate pixels found
-        pixels_found = 5 + (game_state.level - 1) + random.randint(0, 3)
+        base_reward = MINING_REWARD_MIN + (game_state.level * 0.2)  # Increase reward with level
+        max_reward = MINING_REWARD_MAX + (game_state.level * 0.2)
+        reward = round(random.uniform(base_reward, max_reward), 2)
         
         # Update game state
         game_state.token_balance += reward
-        game_state.energy -= 10
-        game_state.pixels += pixels_found
+        game_state.energy -= MINING_ENERGY_COST
+        game_state.pixels += MINING_PIXEL_GAIN
         game_state.experience += 5
         
         # Check for level up

@@ -532,6 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         const username = document.getElementById('username').value.trim();
+        const referralCode = document.getElementById('referral-code').value.trim();
         const errorElement = document.getElementById('registration-error');
         
         if (!username) {
@@ -544,13 +545,19 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('#registration-form button').disabled = true;
         document.querySelector('#registration-form button').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating account...';
         
+        // Prepare request body
+        let requestBody = `username=${encodeURIComponent(username)}`;
+        if (referralCode) {
+            requestBody += `&referral_code=${encodeURIComponent(referralCode)}`;
+        }
+        
         // Send to server
         fetch('/api/web_register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `username=${encodeURIComponent(username)}`
+            body: requestBody
         })
         .then(response => response.json())
         .then(data => {
