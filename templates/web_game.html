@@ -160,26 +160,47 @@
 {% if login_required %}
 <div class="login-container telegram-style">
     <div class="px-2 px-sm-3 py-3 py-sm-4">
-        <h3 class="text-center mb-3 mb-sm-4 fs-4 fs-sm-3">Join the Game</h3>
-        <p class="text-center">Log in with Telegram to start playing the Pixel Plaza Token game!</p>
+        <div class="text-center mb-3">
+            <img src="https://cdn.jsdelivr.net/gh/telegramdesktop/tdesktop/Telegram/Resources/art/icon64.png" 
+                 alt="Telegram Logo" width="48" height="48" class="mb-2">
+            <h3 class="text-center mb-2 fs-4 fs-sm-3 telegram-heading">Join Pixel Plaza</h3>
+            <p class="text-center text-info mb-4">Quick and secure login with Telegram</p>
+        </div>
         
         <div id="registration-error" class="alert alert-danger d-none mb-3"></div>
         
         <div class="text-center mb-4">
-            <div id="telegram-login-pixel_plaza_bot" class="mb-3" style="margin: 0 auto;"></div>
+            <!-- Loading animation that shows before Telegram widget loads -->
+            <div id="tg-login-loading" class="mb-3">
+                <div class="tg-loading mx-auto mb-2">
+                    <div></div><div></div><div></div><div></div>
+                </div>
+                <p class="text-muted small">Loading Telegram login...</p>
+            </div>
             
-            <div class="mb-3">
-                <label for="referral-code" class="form-label">Referral Code <span class="text-muted">(Optional)</span></label>
-                <input type="text" class="form-control" id="referral-code" placeholder="Enter referral code if you have one">
-                <div class="form-text">Get a bonus 3 $PXPT by using a friend's referral code</div>
+            <!-- Telegram login button will be injected here -->
+            <div id="telegram-login-pixel_plaza_bot" class="mb-3" style="margin: 0 auto; display: none;"></div>
+            
+            <div class="mb-3 mt-4">
+                <div class="card bg-dark border-secondary">
+                    <div class="card-body">
+                        <h6 class="text-info mb-3"><i class="fas fa-gift me-2"></i>Get Bonus Tokens</h6>
+                        <label for="referral-code" class="form-label">Referral Code <span class="text-muted">(Optional)</span></label>
+                        <input type="text" class="form-control" id="referral-code" placeholder="Enter referral code if you have one">
+                        <div class="form-text mt-2">Get a bonus 3 $PXPT by using a friend's referral code</div>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <div class="text-center mt-3">
-            <p class="text-muted small mb-1">Or play with Telegram Bot</p>
-            <a href="https://t.me/{{ telegram_bot_username }}" target="_blank" class="btn btn-sm btn-outline-info">
-                <i class="fab fa-telegram me-1"></i>Open Telegram Bot
-            </a>
+        <div class="text-center mt-4">
+            <div class="card bg-dark p-3 border-info">
+                <p class="text-muted small mb-2">Prefer using the Telegram app?</p>
+                <a href="https://t.me/{{ telegram_bot_username }}" target="_blank" class="btn btn-info">
+                    <i class="fab fa-telegram me-1"></i>Open Telegram Bot
+                </a>
+                <div class="form-text mt-2">Access all game features directly in Telegram</div>
+            </div>
         </div>
     </div>
 </div>
@@ -575,18 +596,50 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     {% else %}
-    // Add Telegram Login Widget script
+    // Add Telegram Login Widget script with animation
     const telegramLoginContainer = document.getElementById('telegram-login-pixel_plaza_bot');
+    const loadingElement = document.getElementById('tg-login-loading');
+    
     if (telegramLoginContainer) {
         const script = document.createElement('script');
         script.async = true;
         script.src = "https://telegram.org/js/telegram-widget.js?22";
         script.setAttribute('data-telegram-login', "{{ telegram_bot_username }}");
         script.setAttribute('data-size', "large");
-        script.setAttribute('data-radius', "4");
+        script.setAttribute('data-radius', "8");
         script.setAttribute('data-userpic', "true");
         script.setAttribute('data-onauth', "onTelegramAuth(user)");
         script.setAttribute('data-request-access', "write");
+        
+        // Once the script loads, show the button and hide the loading animation
+        script.onload = function() {
+            setTimeout(() => {
+                if (loadingElement) {
+                    loadingElement.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingElement.style.display = 'none';
+                    }, 300);
+                }
+                
+                // Show the login button with a fade-in effect
+                telegramLoginContainer.style.display = 'block';
+                telegramLoginContainer.style.opacity = '0';
+                setTimeout(() => {
+                    telegramLoginContainer.style.opacity = '1';
+                }, 50);
+            }, 500); // Add a small delay for better visual transition
+        };
+        
+        // Add some animation to the button hover state
+        telegramLoginContainer.addEventListener('mouseover', function() {
+            this.style.transform = 'scale(1.05)';
+            this.style.transition = 'transform 0.3s ease';
+        });
+        
+        telegramLoginContainer.addEventListener('mouseout', function() {
+            this.style.transform = 'scale(1)';
+        });
+        
         telegramLoginContainer.appendChild(script);
     }
     

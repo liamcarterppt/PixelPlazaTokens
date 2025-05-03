@@ -79,3 +79,137 @@
     color: var(--bs-info) !important;
     transition: color 0.2s ease;
 }
+
+/* Telegram Login Animation */
+#telegram-login-pixel_plaza_bot {
+    position: relative;
+    transition: all 0.3s ease;
+    z-index: 1;
+    opacity: 1;
+    box-shadow: 0 4px 15px rgba(0, 136, 204, 0.2);
+    border-radius: 8px;
+}
+
+#telegram-login-pixel_plaza_bot:hover {
+    transform: scale(1.05) translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 136, 204, 0.3);
+}
+
+/* Telegram heading animation */
+.telegram-heading {
+    background: linear-gradient(90deg, #0088cc, #6ac1fb, #0088cc);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shine 4s linear infinite;
+}
+
+@keyframes shine {
+    to {
+        background-position: 200% center;
+    }
+}
+
+/* Loading animation fade transition */
+#tg-login-loading {
+    transition: opacity 0.3s ease;
+}
+
+/* Telegram login container pulsing animation */
+.login-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.login-container::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: radial-gradient(circle, rgba(0, 136, 204, 0.2) 0%, rgba(0, 136, 204, 0) 70%);
+    z-index: -1;
+    opacity: 0;
+    animation: pulse 3s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(1.1);
+        opacity: 0;
+    }
+}
+
+/* Telegram button loading animation */
+.tg-loading {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 20px;
+}
+
+.tg-loading div {
+    position: absolute;
+    top: 8px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #0088cc;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.tg-loading div:nth-child(1) {
+    left: 8px;
+    animation: tg-loading1 0.6s infinite;
+}
+
+.tg-loading div:nth-child(2) {
+    left: 8px;
+    animation: tg-loading2 0.6s infinite;
+}
+
+.tg-loading div:nth-child(3) {
+    left: 32px;
+    animation: tg-loading2 0.6s infinite;
+}
+
+.tg-loading div:nth-child(4) {
+    left: 56px;
+    animation: tg-loading3 0.6s infinite;
+}
+
+@keyframes tg-loading1 {
+    0% {
+        transform: scale(0);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes tg-loading2 {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(24px, 0);
+    }
+}
+
+@keyframes tg-loading3 {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(0);
+    }
+}
