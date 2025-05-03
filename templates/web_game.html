@@ -781,6 +781,17 @@
 
 {% block extra_js %}
 <script>
+/**
+ * Enhanced Game UI JavaScript
+ * Features:
+ * - Advanced animations for game actions
+ * - Token balance animations
+ * - Improved responsive handling
+ * - Optimized Telegram login flow
+ * - Resource bar animations
+ * - Transaction feed animations
+ */
+
 // Telegram Login Widget authentication handler
 function onTelegramAuth(user) {
     // Add referral code if present
@@ -796,12 +807,15 @@ function onTelegramAuth(user) {
         formData.append('referral_code', referralCode);
     }
     
-    // Show loading state
+    // Show loading state with enhanced animation
     const errorDiv = document.getElementById('registration-error');
     if (errorDiv) {
-        errorDiv.textContent = 'Authenticating...';
+        errorDiv.textContent = 'Authenticating with Telegram...';
         errorDiv.className = 'alert alert-info mb-3';
         errorDiv.style.display = 'block';
+        
+        // Add subtle pulsing animation
+        errorDiv.style.animation = 'pulse 2s infinite';
     }
     
     // Submit to our server for verification
@@ -812,15 +826,25 @@ function onTelegramAuth(user) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Redirect to game with authenticated telegram_id
-            window.location.href = `/web-game?id=${data.telegram_id}`;
+            // Show success message before redirect
+            if (errorDiv) {
+                errorDiv.textContent = 'Authentication successful! Redirecting...';
+                errorDiv.className = 'alert alert-success mb-3';
+                errorDiv.style.animation = 'none';
+            }
+            
+            // Redirect with slight delay for better UX
+            setTimeout(() => {
+                window.location.href = `/web-game?id=${data.telegram_id}`;
+            }, 500);
         } else {
-            // Show error
+            // Show error with enhanced styling
             if (typeof showError === 'function') {
                 showError(data.message || 'Authentication failed');
             } else if (errorDiv) {
                 errorDiv.textContent = data.message || 'Authentication failed';
                 errorDiv.className = 'alert alert-danger mb-3';
+                errorDiv.style.animation = 'shake 0.5s';
             }
         }
     })
@@ -831,56 +855,176 @@ function onTelegramAuth(user) {
         } else if (errorDiv) {
             errorDiv.textContent = 'Authentication failed. Please try again.';
             errorDiv.className = 'alert alert-danger mb-3';
+            errorDiv.style.animation = 'shake 0.5s';
         }
     });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize game UI components with animations
+    initGameUI();
+    
     // Add resize handler for responsive layout
     window.addEventListener('resize', function() {
         updateResponsiveElements();
     });
     
-    function updateResponsiveElements() {
-        const isMobile = window.innerWidth < 576;
-        document.querySelectorAll('.game-action').forEach(button => {
-            const action = button.dataset.action;
-            const buttonText = getTextForAction(action, isMobile);
-            
-            // Get the span (if it exists) to avoid replacing the icon
-            const iconEl = button.querySelector('i');
-            if (iconEl) {
-                // Clear button content
-                button.innerHTML = '';
-                // Add back the icon
-                button.appendChild(iconEl);
-                // Add text with appropriate class for responsive display
-                if (isMobile) {
-                    button.innerHTML += `<span class="d-inline d-sm-none">${getTextForAction(action, true)}</span>
-                    <span class="d-none d-sm-inline">${getTextForAction(action, false)}</span>`;
-                } else {
-                    button.innerHTML += getTextForAction(action, false);
-                }
-            }
-        });
-    }
+    // Initial call to set up responsive elements
+    updateResponsiveElements();
     
     {% if not login_required %}
     const telegramId = '{{ user.telegram_id }}';
     
-    // Game Actions
+    // Set up game action handlers with enhanced animations
+    setupGameActions(telegramId);
+    
+    // Set up wallet management
+    setupWalletManagement(telegramId);
+    
+    // Initialize resource bar animations
+    initResourceBars();
+    
+    // Initialize profile card animations
+    initProfileCard();
+    
+    // Initialize achievement badges effects
+    initAchievementBadges();
+    
+    {% else %}
+    // Initialize Telegram login
+    initTelegramLogin();
+    
+    // Set up referral code handling
+    setupReferralCode();
+    {% endif %}
+});
+
+// ------------------------
+// Game UI Initialization
+// ------------------------
+function initGameUI() {
+    // Add entrance animations for game cards
+    document.querySelectorAll('.game-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        
+        // Staggered animation
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 + (index * 150));
+    });
+    
+    // Add click ripple effect to all buttons
+    document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', createRippleEffect);
+    });
+}
+
+// Create ripple effect on button click
+function createRippleEffect(e) {
+    const button = e.currentTarget;
+    
+    // Don't create ripple if button is disabled
+    if (button.disabled) return;
+    
+    const circle = document.createElement('span');
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${e.clientX - button.getBoundingClientRect().left - diameter / 2}px`;
+    circle.style.top = `${e.clientY - button.getBoundingClientRect().top - diameter / 2}px`;
+    circle.classList.add('ripple');
+    
+    // Remove existing ripples
+    const ripple = button.querySelector('.ripple');
+    if (ripple) {
+        ripple.remove();
+    }
+    
+    button.appendChild(circle);
+    
+    // Remove ripple after animation completes
+    setTimeout(() => {
+        circle.remove();
+    }, 600);
+}
+
+// ------------------------
+// Responsive UI Management
+// ------------------------
+function updateResponsiveElements() {
+    const isMobile = window.innerWidth < 576;
+    const isTablet = window.innerWidth >= 576 && window.innerWidth < 992;
+    
+    // Update action buttons text for different screen sizes
     document.querySelectorAll('.game-action').forEach(button => {
-        button.addEventListener('click', function() {
+        const action = button.dataset.action;
+        
+        // Only update if not in loading state (no spinner)
+        if (!button.querySelector('.spinner-border')) {
+            updateButtonContent(button, action, isMobile);
+        }
+    });
+    
+    // Adjust card padding based on screen size
+    document.querySelectorAll('.game-card').forEach(card => {
+        card.style.padding = isMobile ? '15px' : '20px';
+    });
+    
+    // Adjust transaction items display
+    document.querySelectorAll('.transaction-item').forEach(item => {
+        if (isMobile) {
+            item.classList.add('flex-column');
+        } else {
+            item.classList.remove('flex-column');
+        }
+    });
+}
+
+function updateButtonContent(button, action, isMobile) {
+    const icon = document.createElement('i');
+    icon.className = `fas fa-${getIconForAction(action)}`;
+    
+    const span = document.createElement('span');
+    span.textContent = getTextForAction(action, isMobile);
+    
+    // Clear button and add new content
+    button.innerHTML = '';
+    button.appendChild(icon);
+    button.appendChild(document.createElement('br'));
+    button.appendChild(span);
+}
+
+// ------------------------
+// Game Actions Management
+// ------------------------
+function setupGameActions(telegramId) {
+    document.querySelectorAll('.game-action').forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Create ripple effect first
+            createRippleEffect(e);
+            
             const action = this.dataset.action;
             const resultEl = document.getElementById('action-result');
             
             // Disable all action buttons
             document.querySelectorAll('.game-action').forEach(btn => {
                 btn.disabled = true;
+                btn.classList.add('disabled');
             });
             
-            // Show loading state
-            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            // Show animated loading state
+            this.innerHTML = `
+                <div class="position-relative">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span class="ms-2">Processing...</span>
+                </div>
+            `;
+            
+            // Play action sound effect
+            playActionSound(action);
             
             // Send action to server
             fetch('/api/game_action', {
@@ -892,56 +1036,271 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                // Re-enable buttons
+                // Re-enable buttons with animation
                 document.querySelectorAll('.game-action').forEach(btn => {
-                    btn.disabled = false;
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.classList.remove('disabled');
+                    }, 300);
                 });
                 
-                // Reset button text
+                // Reset button text with animation
                 const isMobile = window.innerWidth < 576;
-                const buttonText = getTextForAction(action, isMobile);
-                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${buttonText}`;
+                updateButtonContent(this, action, isMobile);
                 
-                // Show result
-                resultEl.textContent = data.message;
-                resultEl.className = data.success ? 'result-box alert alert-success' : 'result-box alert alert-danger';
-                resultEl.style.display = 'block';
+                // Show result with enhanced animation
+                showActionResult(resultEl, data.message, data.success);
                 
-                // Auto-refresh after 3 seconds
+                // Update token display with animation if amount was provided
+                if (data.token_amount) {
+                    updateTokenDisplay(data.token_amount, data.success);
+                }
+                
+                // Create floating reward animation if successful
+                if (data.success) {
+                    createFloatingReward(action, data.token_amount || 0);
+                }
+                
+                // Auto-refresh after animation completes
                 setTimeout(() => {
                     location.reload();
                 }, 3000);
             })
             .catch(error => {
                 console.error('Error:', error);
+                
+                // Re-enable buttons
                 document.querySelectorAll('.game-action').forEach(btn => {
                     btn.disabled = false;
+                    btn.classList.remove('disabled');
                 });
+                
+                // Reset button with original content
                 const isMobile = window.innerWidth < 576;
-                const buttonText = getTextForAction(action, isMobile);
-                this.innerHTML = `<i class="fas fa-${getIconForAction(action)} d-block mb-1"></i>${buttonText}`;
-                resultEl.textContent = 'An error occurred. Please try again.';
-                resultEl.className = 'result-box alert alert-danger';
-                resultEl.style.display = 'block';
+                updateButtonContent(this, action, isMobile);
+                
+                // Show error with animation
+                showActionResult(resultEl, 'An error occurred. Please try again.', false);
             });
         });
     });
+}
+
+function showActionResult(element, message, isSuccess) {
+    // Create a more visual result box
+    element.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="fas fa-${isSuccess ? 'check-circle' : 'exclamation-circle'} fa-2x"></i>
+            </div>
+            <div>
+                <h6 class="mb-0">${isSuccess ? 'Success!' : 'Error'}</h6>
+                <p class="mb-0">${message}</p>
+            </div>
+        </div>
+    `;
     
-    // Wallet Modal
-    document.getElementById('wallet-btn').addEventListener('click', function() {
+    element.className = isSuccess ? 'result-box success' : 'result-box error';
+    
+    // Apply entrance animation
+    element.style.display = 'block';
+    element.style.opacity = '0';
+    element.style.transform = 'translateY(-10px)';
+    
+    setTimeout(() => {
+        element.style.opacity = '1';
+        element.style.transform = 'translateY(0)';
+        element.style.transition = 'opacity 0.3s, transform 0.3s';
+    }, 10);
+}
+
+function createFloatingReward(action, amount) {
+    // Only create animation for positive amounts
+    if (amount <= 0) return;
+    
+    const rewardType = 
+        action === 'daily' ? 'daily' :
+        action === 'mine' ? 'pixels' :
+        action === 'create' ? 'art' :
+        action === 'collect' ? 'income' : 'tokens';
+        
+    const icons = {
+        'daily': 'calendar-check',
+        'pixels': 'paint-brush',
+        'art': 'palette',
+        'income': 'coins',
+        'tokens': 'coins'
+    };
+    
+    const colors = {
+        'daily': '#007bff',
+        'pixels': '#17a2b8',
+        'art': '#dc3545',
+        'income': '#28a745',
+        'tokens': '#ffc107'
+    };
+    
+    // Create floating reward element
+    const floatingReward = document.createElement('div');
+    floatingReward.className = 'floating-reward position-fixed';
+    floatingReward.style.zIndex = '1050';
+    floatingReward.style.pointerEvents = 'none';
+    floatingReward.style.left = `${Math.random() * 60 + 20}%`;
+    floatingReward.style.top = `${Math.random() * 30 + 20}%`;
+    floatingReward.style.transition = 'all 1s ease-out';
+    
+    // Create content
+    floatingReward.innerHTML = `
+        <div class="d-flex align-items-center bg-dark bg-opacity-75 p-2 rounded-pill">
+            <i class="fas fa-${icons[rewardType]}" style="color: ${colors[rewardType]}"></i>
+            <span class="ms-2 text-white">+${amount.toFixed(2)} ${rewardType === 'pixels' ? 'pixels' : '$PXPT'}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(floatingReward);
+    
+    // Animate upward and fade out
+    setTimeout(() => {
+        floatingReward.style.transform = 'translateY(-100px)';
+        floatingReward.style.opacity = '0';
+        
+        // Remove after animation
+        setTimeout(() => {
+            floatingReward.remove();
+        }, 1000);
+    }, 100);
+}
+
+function updateTokenDisplay(amount, isPositive) {
+    const tokenDisplay = document.getElementById('token-display');
+    if (!tokenDisplay) return;
+    
+    // Get current value
+    const currentValue = parseFloat(tokenDisplay.textContent);
+    const newValue = currentValue + amount;
+    
+    // Add animation class based on whether amount is positive or negative
+    tokenDisplay.classList.add(isPositive ? 'increase' : 'decrease');
+    
+    // Update the display with animation
+    setTimeout(() => {
+        tokenDisplay.textContent = newValue.toFixed(2);
+        
+        // Remove animation class after it completes
+        setTimeout(() => {
+            tokenDisplay.classList.remove('increase', 'decrease');
+        }, 1000);
+    }, 300);
+}
+
+function playActionSound(action) {
+    // Could implement sound effects here if desired
+    // (HTML5 Audio API)
+    console.log(`Action sound for: ${action}`);
+}
+
+// ------------------------
+// Resource Bars Animations
+// ------------------------
+function initResourceBars() {
+    document.querySelectorAll('.resource-bar .progress-bar').forEach(bar => {
+        // Initial state
+        const originalWidth = bar.style.width;
+        bar.style.width = '0%';
+        
+        // Animate to actual value
+        setTimeout(() => {
+            bar.style.width = originalWidth;
+        }, 500);
+    });
+}
+
+// ------------------------
+// Profile Card Animations
+// ------------------------
+function initProfileCard() {
+    const profileAvatar = document.querySelector('.profile-avatar');
+    if (profileAvatar) {
+        // Add subtle pulsing animation
+        profileAvatar.style.animation = 'pulse 3s infinite';
+    }
+    
+    // Make stat badges interactive
+    document.querySelectorAll('.stat-badge').forEach(badge => {
+        badge.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        badge.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+}
+
+function initAchievementBadges() {
+    // Add subtle entrance animations to badges
+    document.querySelectorAll('.stat-badge').forEach((badge, index) => {
+        badge.style.opacity = '0';
+        badge.style.transform = 'scale(0.8)';
+        
+        setTimeout(() => {
+            badge.style.opacity = '1';
+            badge.style.transform = 'scale(1)';
+            badge.style.transition = 'all 0.3s ease';
+        }, 800 + (index * 100));
+    });
+}
+
+// ------------------------
+// Wallet Management
+// ------------------------
+function setupWalletManagement(telegramId) {
+    const walletBtn = document.getElementById('wallet-btn');
+    if (!walletBtn) return;
+    
+    walletBtn.addEventListener('click', function() {
         const walletModal = new bootstrap.Modal(document.getElementById('walletModal'));
         walletModal.show();
     });
     
-    // Wallet form submission
-    document.getElementById('save-wallet').addEventListener('click', function() {
+    // Add enhanced validation and submission
+    const saveWalletBtn = document.getElementById('save-wallet');
+    if (!saveWalletBtn) return;
+    
+    saveWalletBtn.addEventListener('click', function() {
         const walletAddress = document.getElementById('wallet-address').value.trim();
+        const walletForm = document.getElementById('wallet-form');
+        const formFeedback = walletForm.querySelector('.form-feedback');
         
-        // Basic validation
+        // Remove any existing feedback
+        if (formFeedback) formFeedback.remove();
+        
+        // Enhanced validation with visual feedback
         if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
-            alert('Please enter a valid ERC-20 wallet address (starting with 0x and 42 characters long)');
+            // Create feedback element
+            const feedback = document.createElement('div');
+            feedback.className = 'form-feedback invalid-feedback d-block mt-2';
+            feedback.textContent = 'Please enter a valid ERC-20 wallet address (starting with 0x and 42 characters long)';
+            
+            // Add to form
+            walletForm.appendChild(feedback);
+            
+            // Shake the input
+            const input = document.getElementById('wallet-address');
+            input.classList.add('is-invalid');
+            input.style.animation = 'shake 0.5s';
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                input.style.animation = '';
+            }, 500);
+            
             return;
         }
+        
+        // Show loading state
+        saveWalletBtn.disabled = true;
+        saveWalletBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...';
         
         // Send to server
         fetch('/api/update_wallet', {
@@ -957,101 +1316,182 @@ document.addEventListener('DOMContentLoaded', function() {
                 bootstrap.Modal.getInstance(document.getElementById('walletModal')).hide();
                 
                 const resultEl = document.getElementById('action-result');
-                resultEl.textContent = 'Wallet address updated successfully!';
-                resultEl.className = 'result-box alert alert-success';
-                resultEl.style.display = 'block';
+                showActionResult(resultEl, 'Wallet address updated successfully!', true);
                 
-                // Auto-refresh after 2 seconds
+                // Auto-refresh after animation completes
                 setTimeout(() => {
                     location.reload();
                 }, 2000);
             } else {
-                alert(data.message);
+                // Show error in modal
+                saveWalletBtn.disabled = false;
+                saveWalletBtn.innerHTML = 'Save Address';
+                
+                // Create feedback element
+                const feedback = document.createElement('div');
+                feedback.className = 'form-feedback invalid-feedback d-block mt-2';
+                feedback.textContent = data.message || 'Failed to update wallet address';
+                
+                // Add to form
+                walletForm.appendChild(feedback);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while updating your wallet address. Please try again.');
+            
+            // Reset button
+            saveWalletBtn.disabled = false;
+            saveWalletBtn.innerHTML = 'Save Address';
+            
+            // Show error
+            const feedback = document.createElement('div');
+            feedback.className = 'form-feedback invalid-feedback d-block mt-2';
+            feedback.textContent = 'An error occurred while updating your wallet address. Please try again.';
+            walletForm.appendChild(feedback);
         });
     });
-    {% else %}
-    // Add Telegram Login Widget script with animation
+}
+
+// ------------------------
+// Telegram Login Handling
+// ------------------------
+function initTelegramLogin() {
     const telegramLoginContainer = document.getElementById('telegram-login-pixel_plaza_bot');
     const loadingElement = document.getElementById('tg-login-loading');
     
-    if (telegramLoginContainer) {
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = "https://telegram.org/js/telegram-widget.js?22";
-        script.setAttribute('data-telegram-login', "{{ telegram_bot_username }}");
-        script.setAttribute('data-size', "large");
-        script.setAttribute('data-radius', "8");
-        script.setAttribute('data-userpic', "true");
-        script.setAttribute('data-onauth', "onTelegramAuth(user)");
-        script.setAttribute('data-request-access', "write");
-        
-        // Once the script loads, show the button and hide the loading animation
-        script.onload = function() {
-            setTimeout(() => {
-                if (loadingElement) {
-                    loadingElement.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingElement.style.display = 'none';
-                    }, 300);
-                }
+    if (!telegramLoginContainer) return;
+    
+    // Create Telegram Login Widget with enhanced animation
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.setAttribute('data-telegram-login', "{{ telegram_bot_username }}");
+    script.setAttribute('data-size', "large");
+    script.setAttribute('data-radius', "8");
+    script.setAttribute('data-userpic', "true");
+    script.setAttribute('data-onauth', "onTelegramAuth(user)");
+    script.setAttribute('data-request-access', "write");
+    
+    // Once the script loads, animate transition
+    script.onload = function() {
+        setTimeout(() => {
+            if (loadingElement) {
+                // Fade out loading animation
+                loadingElement.style.opacity = '0';
+                loadingElement.style.transform = 'scale(0.9)';
+                loadingElement.style.transition = 'opacity 0.5s, transform 0.5s';
                 
-                // Show the login button with a fade-in effect
-                telegramLoginContainer.style.display = 'block';
-                telegramLoginContainer.style.opacity = '0';
                 setTimeout(() => {
-                    telegramLoginContainer.style.opacity = '1';
-                }, 50);
-            }, 500); // Add a small delay for better visual transition
-        };
-        
-        // Add some animation to the button hover state
-        telegramLoginContainer.addEventListener('mouseover', function() {
-            this.style.transform = 'scale(1.05)';
-            this.style.transition = 'transform 0.3s ease';
-        });
-        
-        telegramLoginContainer.addEventListener('mouseout', function() {
-            this.style.transform = 'scale(1)';
-        });
-        
-        telegramLoginContainer.appendChild(script);
-    }
-    
-    // Referral code handling
-    const referralCodeInput = document.getElementById('referral-code');
-    if (referralCodeInput) {
-        // Store referral code in session storage when changed
-        referralCodeInput.addEventListener('change', function() {
-            if (this.value.trim()) {
-                sessionStorage.setItem('referral_code', this.value.trim());
-            } else {
-                sessionStorage.removeItem('referral_code');
+                    loadingElement.style.display = 'none';
+                }, 500);
             }
-        });
-        
-        // Restore from session storage if available
-        const savedCode = sessionStorage.getItem('referral_code');
-        if (savedCode) {
-            referralCodeInput.value = savedCode;
-        }
-    }
+            
+            // Fade in Telegram login button with pop effect
+            telegramLoginContainer.style.display = 'block';
+            telegramLoginContainer.style.opacity = '0';
+            telegramLoginContainer.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                telegramLoginContainer.style.opacity = '1';
+                telegramLoginContainer.style.transform = 'scale(1)';
+                telegramLoginContainer.style.transition = 'opacity 0.5s, transform 0.5s';
+            }, 100);
+        }, 600);
+    };
     
-    // Display error message function
-    const errorElement = document.getElementById('registration-error');
-    function showError(message) {
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.className = 'alert alert-danger mb-3';
-            errorElement.style.display = 'block';
+    // Add enhanced hover effects for Telegram login button
+    telegramLoginContainer.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05) translateY(-3px)';
+        this.style.boxShadow = '0 10px 25px rgba(0, 136, 204, 0.3)';
+        this.style.transition = 'all 0.3s ease';
+    });
+    
+    telegramLoginContainer.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1) translateY(0)';
+        this.style.boxShadow = '0 4px 15px rgba(0, 136, 204, 0.2)';
+    });
+    
+    telegramLoginContainer.appendChild(script);
+}
+
+// ------------------------
+// Referral Code Handling
+// ------------------------
+function setupReferralCode() {
+    const referralCodeInput = document.getElementById('referral-code');
+    if (!referralCodeInput) return;
+    
+    // Enhanced referral code handling with visual feedback
+    referralCodeInput.addEventListener('input', function() {
+        // Validate as user types
+        if (this.value.trim().length > 0) {
+            if (/^[A-Za-z0-9]{8,16}$/.test(this.value.trim())) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        } else {
+            this.classList.remove('is-valid', 'is-invalid');
         }
+    });
+    
+    // Store referral code with visual feedback
+    referralCodeInput.addEventListener('change', function() {
+        if (this.value.trim()) {
+            sessionStorage.setItem('referral_code', this.value.trim());
+            
+            // Show confirmation
+            const parent = this.closest('.card-body');
+            if (parent && !parent.querySelector('.code-saved-confirmation')) {
+                const confirmation = document.createElement('div');
+                confirmation.className = 'code-saved-confirmation text-success small mt-2';
+                confirmation.innerHTML = '<i class="fas fa-check-circle me-1"></i>Referral code saved';
+                
+                // Animate confirmation
+                confirmation.style.opacity = '0';
+                parent.appendChild(confirmation);
+                
+                setTimeout(() => {
+                    confirmation.style.opacity = '1';
+                    confirmation.style.transition = 'opacity 0.3s';
+                }, 10);
+                
+                // Remove after a few seconds
+                setTimeout(() => {
+                    confirmation.style.opacity = '0';
+                    setTimeout(() => confirmation.remove(), 300);
+                }, 3000);
+            }
+        } else {
+            sessionStorage.removeItem('referral_code');
+        }
+    });
+    
+    // Restore from session storage with animation
+    const savedCode = sessionStorage.getItem('referral_code');
+    if (savedCode) {
+        // Create typing animation effect
+        let i = 0;
+        const typeEffect = setInterval(() => {
+            referralCodeInput.value = savedCode.substring(0, i);
+            i++;
+            if (i > savedCode.length) {
+                clearInterval(typeEffect);
+                
+                // Highlight briefly to indicate it was auto-filled
+                setTimeout(() => {
+                    referralCodeInput.classList.add('is-valid');
+                    
+                    setTimeout(() => {
+                        referralCodeInput.classList.remove('is-valid');
+                    }, 1500);
+                }, 200);
+            }
+        }, 50);
     }
-    {% endif %}
-});
+}
 
 // Helper functions for action buttons
 function getIconForAction(action) {
@@ -1086,5 +1526,40 @@ function getTextForAction(action, isMobile = false) {
         }
     }
 }
+
+// Add CSS-only Button Ripple Effect
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+</style>
+`);
 </script>
 {% endblock %}
