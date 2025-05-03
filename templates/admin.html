@@ -1954,11 +1954,11 @@ if (applyFilters && userTable) {
 }
 
 // Select all checkbox functionality
-const selectAllUsers = document.getElementById('selectAllUsers');
+var selectAllUsers = document.getElementById('selectAllUsers');
 if (selectAllUsers && userTable) {
     selectAllUsers.addEventListener('change', function() {
-        const checkboxes = userTable.querySelectorAll('.user-select');
-        checkboxes.forEach(checkbox => {
+        var checkboxes = userTable.querySelectorAll('.user-select');
+        checkboxes.forEach(function(checkbox) {
             checkbox.checked = selectAllUsers.checked;
         });
     });
@@ -1967,11 +1967,11 @@ if (selectAllUsers && userTable) {
 // Tab switching functionality for content management section
 document.addEventListener('DOMContentLoaded', function() {
     // Content management tab navigation
-    const contentNavItems = document.querySelectorAll('.content-nav .list-group-item');
+    var contentNavItems = document.querySelectorAll('.content-nav .list-group-item');
     if (contentNavItems.length > 0) {
-        contentNavItems.forEach(item => {
+        contentNavItems.forEach(function(item) {
             item.addEventListener('click', function(e) {
-                contentNavItems.forEach(navItem => {
+                contentNavItems.forEach(function(navItem) {
                     navItem.classList.remove('active');
                 });
                 this.classList.add('active');
@@ -1980,20 +1980,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Add tab activation listeners for mobile nav
-    const mobileNavItems = document.querySelectorAll('[id$="-tab-mobile"]');
+    var mobileNavItems = document.querySelectorAll('[id$="-tab-mobile"]');
     if (mobileNavItems.length > 0) {
-        mobileNavItems.forEach(item => {
+        mobileNavItems.forEach(function(item) {
             item.addEventListener('click', function() {
                 // Set corresponding desktop tab active state
-                const targetId = this.getAttribute('data-bs-target');
-                const desktopTab = document.querySelector(`[data-bs-target="${targetId}"]:not([id$="-mobile"])`);
+                var targetId = this.getAttribute('data-bs-target');
+                var desktopTab = document.querySelector('[data-bs-target="' + targetId + '"]:not([id$="-mobile"])');
                 if (desktopTab) {
-                    const tabTrigger = new bootstrap.Tab(desktopTab);
+                    var tabTrigger = new bootstrap.Tab(desktopTab);
                     tabTrigger.show();
                 }
                 
                 // Remove active class from all mobile items
-                mobileNavItems.forEach(navItem => {
+                mobileNavItems.forEach(function(navItem) {
                     navItem.classList.remove('active');
                 });
                 
@@ -2002,19 +2002,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-}
+});
 
 // Airdrop Countdown Timer
-const airdropCountdown = document.getElementById('airdropCountdown');
+var airdropCountdown = document.getElementById('airdropCountdown');
 if (airdropCountdown) {
-    const targetDate = new Date('May 10, 2025 12:00:00').getTime();
+    var targetDate = new Date('May 10, 2025 12:00:00').getTime();
     
     function updateCountdown() {
-        const now = new Date().getTime();
-        const distance = targetDate - now;
+        var now = new Date().getTime();
+        var distance = targetDate - now;
         
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         
         airdropCountdown.textContent = days + ' days ' + hours + ' hours';
         

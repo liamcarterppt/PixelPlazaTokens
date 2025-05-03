@@ -481,13 +481,21 @@ def admin():
     users_with_pixel_art = 0
     eligible_users = 0
     active_tasks = 8  # Default value for content management stats
-    announcements = 3
+    
+    # Sample announcements list for the template
+    announcements = [
+        {'id': 1, 'title': 'Welcome to Pixel Plaza Token', 'content': 'The game is now in beta testing!', 'date': '2025-05-01', 'is_active': True},
+        {'id': 2, 'title': 'Mining Event Weekend', 'content': 'Double mining rewards this weekend!', 'date': '2025-05-03', 'is_active': True},
+        {'id': 3, 'title': 'Upcoming Airdrop', 'content': 'Prepare for our first airdrop on May 10th!', 'date': '2025-05-02', 'is_active': True}
+    ]
+    
     active_events = 1
     help_articles = 5
     
     try:
         # Get all users with their game states
-        db.session.execute("SELECT 1")  # Test connection query
+        from sqlalchemy import text
+        db.session.execute(text("SELECT 1"))  # Test connection query
         
         users = db.session.query(
             User, GameState
